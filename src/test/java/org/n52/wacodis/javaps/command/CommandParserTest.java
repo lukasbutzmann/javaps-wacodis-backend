@@ -22,8 +22,7 @@ public class CommandParserTest {
      */
     @Test
     public void testParseCommand() {
-        ProcessCommand pc = new ProcessCommand();
-        pc.setProcessApplication("mvn");
+        ProcessCommand pc = new ProcessCommand("mvn");
        
         CommandParameter p1 = new CommandParameter();
         p1.setParameter("-version");

@@ -20,10 +20,16 @@ public class ProcessCommand extends AbstractProcessCommand {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProcessCommand.class);
 
+    public ProcessCommand(String processApplication) {
+        super(processApplication);
+    }
+
     @Override
-    public int execute() throws InterruptedException {
+    public ProcessResult execute() throws InterruptedException {
         CommandParser parser = new CommandParser(this);
         int returnCode = -1;
+
+        ProcessResult result = new ProcessResult(returnCode, "");
         try {
             Process process = parser.parseCommand().start();
 
@@ -38,7 +44,8 @@ public class ProcessCommand extends AbstractProcessCommand {
                         while ((line = input.readLine()) != null) {
                             builder.appendln(line);
                         }
-                        LOGGER.debug(builder.toString());
+                        result.setOutputMessage(builder.toString());
+                        LOGGER.debug(result.getOutputMessage());
 
                     } catch (IOException ex) {
                         LOGGER.error(ex.getMessage());
@@ -48,12 +55,13 @@ public class ProcessCommand extends AbstractProcessCommand {
             }).start();
 
             returnCode = process.waitFor();
+            result.setResultCode(returnCode);
 
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage());
             LOGGER.debug("Error while prcessing command", ex);
         } finally {
-            return returnCode;
+            return result;
         }
     }
 
