@@ -5,6 +5,7 @@
  */
 package org.n52.wacodis.javaps.command;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,7 @@ public abstract class AbstractProcessCommand {
 
     private List<CommandParameter> parameters;
 
-    public abstract int execute();
+    public abstract int execute() throws InterruptedException;
 
     public String getProcessApplication() {
         return processApplication;

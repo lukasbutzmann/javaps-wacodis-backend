@@ -8,8 +8,9 @@ package org.n52.wacodis.javaps.command;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.lang.text.StrBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
@@ -17,49 +18,43 @@ import java.util.logging.Logger;
  */
 public class ProcessCommand extends AbstractProcessCommand {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProcessCommand.class);
+
     @Override
-    public int execute() {
+    public int execute() throws InterruptedException {
+        CommandParser parser = new CommandParser(this);
         int returnCode = -1;
-        
         try {
-            String cmd = "mvn -version";
-            
-            boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
-            if (isWindows) {
-                cmd = "cmd.exe /c " + cmd;
-            }
-            
-            System.out.println("Command: " + cmd);
-            
-            Runtime rt = Runtime.getRuntime();
-            Process pr = rt.exec(cmd);
-            
+            Process process = parser.parseCommand().start();
+
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                    BufferedReader input = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     String line = null;
-                    
+                    StrBuilder builder = new StrBuilder();
+
                     try {
                         while ((line = input.readLine()) != null) {
-                            System.out.println(line);
+                            builder.appendln(line);
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
+                        LOGGER.debug(builder.toString());
+
+                    } catch (IOException ex) {
+                        LOGGER.error(ex.getMessage());
+                        LOGGER.debug("Error while reading process output", ex);
                     }
                 }
             }).start();
-            
-            returnCode = pr.waitFor();
-            
-            System.out.println("Return Code: " + returnCode);
+
+            returnCode = process.waitFor();
+
         } catch (IOException ex) {
-            Logger.getLogger(ProcessCommand.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ProcessCommand.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error(ex.getMessage());
+            LOGGER.debug("Error while prcessing command", ex);
+        } finally {
+            return returnCode;
         }
-        
-        return returnCode;
     }
 
 }
