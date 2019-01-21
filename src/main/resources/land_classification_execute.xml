@@ -1,0 +1,32 @@
+<wps:Execute
+    xmlns:wps="http://www.opengis.net/wps/2.0"
+    xmlns:ows="http://www.opengis.net/ows/2.0"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.opengis.net/wps/2.0 ../wps.xsd"
+    service="WPS"
+    version="2.0.0"
+    response="document"
+    mode="async">
+
+    <ows:Identifier>de.hsbo.wacodis.land_cover_classification</ows:Identifier>
+    <wps:Input id="OPTICAL_IMAGES_TYPE">
+        <wps:Input id="OPTICAL_IMAGES_TYPE">
+            <wps:Data mimeType="text/plain">"Sentinel-2"</wps:Data>
+        </wps:Input>
+        <wps:Input id="OPTICAL_IMAGES_SOURCE">
+            <wps:Data mimeType="text/plain">"Source 1"</wps:Data>
+        </wps:Input>
+    </wps:Input>
+    <wps:Input id="REFERENCE_DATA">
+        <wps:Input id="REFERENCE_DATA_TYPE">
+            <wps:Data mimeType="text/plain">"ATKIS"</wps:Data>
+        </wps:Input>
+        <wps:Input id="REFERENCE_DATA_SOURCE">
+            <wps:Reference xlink:href="http://geoprocessing.demo.52north.org:8080/geoserver/wfs?SERVICE=WFS&amp;VERSION=1.0.0&amp;REQUEST=GetFeature&amp;TYPENAME=topp:tasmania_roads&amp;SRS=EPSG:4326&amp;OUTPUTFORMAT=GML3" mimeType="text/xml" schema="http://schemas.opengis.net/gml/3.0.0/base/feature.xsd" />
+        </wps:Input>
+    </wps:Input>
+    
+    <wps:Output id="PRODUCT" transmission="value" mimeType="text/xml"/>
+    
+</wps:Execute>
