@@ -31,8 +31,12 @@ public class CommandParserTest {
         
         CommandParser cp = new CommandParser(pc);
         ProcessBuilder pb = cp.parseCommand();
-        
-        //assertEquals("cmd.exe /c mvn -version",);
+
+        if(System.getProperty("os.name").toLowerCase().startsWith("windows"))
+            assertEquals("cmd.exe /c mvn -version", String.join(" ", pb.command()));
+        else{
+            assertEquals("mvn -version", String.join(" ", pb.command()));
+        }
     }
     
 }
