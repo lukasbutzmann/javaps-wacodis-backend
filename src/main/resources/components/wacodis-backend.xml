@@ -26,6 +26,7 @@
                            http://www.springframework.org/schema/util/spring-util-4.1.xsd">
 
     <bean id="landCoverClassificationAlgorithm" class="org.n52.wacodis.javaps.algorithms.LandCoverClassificationAlgorithm" />
+    <bean id="sentinelProcess" class="org.n52.wacodis.javaps.algorithms.SentinelImageDownloadAlgorithm" />
     
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
 
