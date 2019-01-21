@@ -5,6 +5,7 @@
  */
 package org.n52.wacodis.javaps.command;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -34,8 +35,11 @@ public abstract class AbstractProcessCommand {
     public void setParameter(List<CommandParameter> parameter) {
         this.parameters = parameter;
     }
-    
-    public void addParameter(CommandParameter param){
+
+    public void addParameter(CommandParameter param) {
+        if (parameters == null) {
+            parameters = new ArrayList();
+        }
         this.parameters.add(param);
     }
 
