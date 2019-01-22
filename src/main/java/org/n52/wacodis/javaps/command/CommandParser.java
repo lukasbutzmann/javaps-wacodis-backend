@@ -9,12 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * converts AbstractProcessComand to ProcessBuilder needed to start a command as process
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
 public class CommandParser {
 
-    
     private AbstractProcessCommand command;
 
     public AbstractProcessCommand getCommand() {
@@ -32,8 +31,7 @@ public class CommandParser {
     public CommandParser(){}
     
     /**
-     *
-     * @param parameters
+     * creates ProcessBuilder for this.command
      * @return
      */
     public ProcessBuilder parseCommand() {
@@ -45,6 +43,7 @@ public class CommandParser {
         this.command.getParameter().forEach(p -> {
             parametersStr.add(p.getParameter());
 
+            //parameter might be a flag without value
             if (p.getValue() != null && p.getValue().trim().isEmpty()) {
                 parametersStr.add(p.getValue());
             }
