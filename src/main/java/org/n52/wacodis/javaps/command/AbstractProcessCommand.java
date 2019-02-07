@@ -19,6 +19,7 @@ public abstract class AbstractProcessCommand {
     private List<CommandParameter> parameters;
 
     public AbstractProcessCommand(String processApplication) {
+        this.parameters = new ArrayList<>();
         this.processApplication = processApplication;
     }
 
@@ -42,7 +43,7 @@ public abstract class AbstractProcessCommand {
 
     public void addParameter(CommandParameter param) {
         if (parameters == null) {
-            parameters = new ArrayList();
+            parameters = new ArrayList<>();
         }
         this.parameters.add(param);
     }

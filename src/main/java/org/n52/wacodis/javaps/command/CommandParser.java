@@ -41,7 +41,11 @@ public class CommandParser {
         parametersStr.add(this.command.getProcessApplication());
 
         this.command.getParameter().forEach(p -> {
-            parametersStr.add(p.getParameter());
+            
+            //paramater might be a unnamed parameter (value only)
+            if(p.getParameter() != null && !p.getParameter().trim().isEmpty()){
+                parametersStr.add(p.getParameter());
+            }
 
             //parameter might be a flag without value
             if (p.getValue() != null && !p.getValue().trim().isEmpty()) {
