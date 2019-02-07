@@ -12,8 +12,15 @@ package org.n52.wacodis.javaps.command;
 public class CommandParameter {
 
     private String name;
-
     private String value;
+
+    public CommandParameter() {
+    }
+
+    public CommandParameter(String name, String value) {
+        this.name = name;
+        this.value = value;
+    }
 
     public String getParameter() {
         return name;

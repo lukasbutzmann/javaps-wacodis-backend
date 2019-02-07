@@ -44,7 +44,7 @@ public class CommandParser {
             parametersStr.add(p.getParameter());
 
             //parameter might be a flag without value
-            if (p.getValue() != null && p.getValue().trim().isEmpty()) {
+            if (p.getValue() != null && !p.getValue().trim().isEmpty()) {
                 parametersStr.add(p.getValue());
             }
         });
