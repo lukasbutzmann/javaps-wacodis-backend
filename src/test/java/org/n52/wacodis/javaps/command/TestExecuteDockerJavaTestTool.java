@@ -27,7 +27,6 @@ public class TestExecuteDockerJavaTestTool {
      * Test of execute method, of class DockerController.
      */
     @Test
-    @Ignore
     public void testExecute() /*throws Exception*/ {
         DockerController dock = new org.n52.wacodis.dockerjava.DockerController();
         dock.setImagename("dlm_docker:wacodis-eo-hackathon");
@@ -41,7 +40,7 @@ public class TestExecuteDockerJavaTestTool {
         parameters.add(0, "/bin/ash");
         parameters.add(1,"/eo.sh");
         dock.startDockerWithVolume(volumemapping, parameters);
-        dock.listContainers();
+        dock.inspectContainer();
         dock.stopDocker();
         dock.removeDocker();
     }

@@ -4,11 +4,13 @@ import java.util.*;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Container;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
 import com.github.dockerjava.core.DockerClientConfig;
+import com.github.dockerjava.netty.NettyDockerCmdExecFactory;
 import org.apache.commons.lang.SystemUtils;
 
 public class DockerController {
@@ -75,11 +77,9 @@ public class DockerController {
                 .exec();
         }
 
-        public void listContainers() {
-                List<Container> containers = dockerClient.listContainersCmd().exec();
-                for(Container cont : containers){
-                        System.out.println(cont.toString());
-                }
+        public void inspectContainer() {
+            InspectContainerResponse inspect = dockerClient.inspectContainerCmd(container.getId()).exec();
+            System.out.println("Container running? " + inspect.getState().getRunning());
         }
 
         private DockerClient getDefaultConnection() {
@@ -97,7 +97,8 @@ public class DockerController {
                                         .build();
                         }
 
-                        return DockerClientBuilder.getInstance(config).build();
+                        return DockerClientBuilder.getInstance(config)
+                                .withDockerCmdExecFactory(new NettyDockerCmdExecFactory()).build();
                 });
         }
 }
