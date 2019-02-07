@@ -5,12 +5,22 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
 import org.n52.javaps.algorithm.annotation.Algorithm;
-import org.n52.javaps.algorithm.annotation.ComplexInput;
 import org.n52.javaps.algorithm.annotation.Execute;
+import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.algorithm.annotation.LiteralOutput;
-import org.n52.javaps.io.GenericFileData;
-import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpRequest;
+import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
+import org.springframework.web.client.RestTemplate;
 
 /**
  *
@@ -25,18 +35,20 @@ import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
         statusSupported = true)
 public class SentinelImageDownloadAlgorithm {
 
-    private GenericFileData referenceData;
+    private String referenceData;
     private String product;
 
-    @ComplexInput(
+    @Autowired
+    private RestTemplate openAccessHubService;
+
+    @LiteralInput(
             identifier = "SENTINEL_DATA",
             title = "Sentinel data",
             abstrakt = "Sentinel data from Open Access Hub",
             minOccurs = 1,
-            maxOccurs = 1,
-            binding = GenericFileDataBinding.class
+            maxOccurs = 1
     )
-    public void setReferenceData(GenericFileData value) {
+    public void setReferenceData(String value) {
         this.referenceData = value;
     }
 
@@ -44,9 +56,19 @@ public class SentinelImageDownloadAlgorithm {
     public void execute() {
         //TODO Resolve ID for optical images and fetch images as GeoTIFF
 
-        //TODO Resolve 
-        product = referenceData.getBaseFile(false).getName();
+        // Optional Accept header
+        RequestCallback callback = (ClientHttpRequest request) -> {
+            request.getHeaders()
+                    .setAccept(Arrays.asList(MediaType.APPLICATION_OCTET_STREAM));
+        };
 
+        ResponseExtractor<String> responseExtractor = (ClientHttpResponse response) -> {
+//            File file = Files.response.
+            return response.getStatusText();
+        };
+
+        String code = openAccessHubService.execute(referenceData, HttpMethod.GET, callback, responseExtractor);
+        this.product = code;
     }
 
     @LiteralOutput(identifier = "PRODUCT")
