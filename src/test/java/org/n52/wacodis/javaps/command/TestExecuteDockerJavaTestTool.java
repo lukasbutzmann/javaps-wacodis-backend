@@ -31,7 +31,8 @@ public class TestExecuteDockerJavaTestTool {
         DockerController dock = new org.n52.wacodis.dockerjava.DockerController();
         dock.setImagename("dlm_docker:wacodis-eo-hackathon");
         dock.setContainername("wacodis-eo-dlm");
-        String volumemapping = "/home/ak/Develop/wacodis/public:/public";
+        String volumemapping = "/home/ak/Develop/wacodis/public:/public"; //linux
+        //String volumemapping = "C:\\Users\\Mustermann\\path\\to\\wacodis\\public:/public"; //windows
         List<String> params = Arrays.asList(
                 "-input","S2B_MSIL2A_20181010T104019_N0209_R008_T32ULB_20181010T171128.tif",
                 "-result","result.tif",
