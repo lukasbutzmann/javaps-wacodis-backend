@@ -84,6 +84,21 @@ public class DockerController {
         System.out.println("Container running? " + inspect.getState().getRunning());
     }
 
+    public Boolean isRunning() {
+        InspectContainerResponse inspect = dockerClient.inspectContainerCmd(container.getId()).exec();
+        return inspect.getState().getRunning();
+    }
+
+    public Integer getExitCode() {
+        InspectContainerResponse inspect = dockerClient.inspectContainerCmd(container.getId()).exec();
+        return inspect.getState().getExitCode();
+    }
+
+    public Boolean isDead() {
+        InspectContainerResponse inspect = dockerClient.inspectContainerCmd(container.getId()).exec();
+        return inspect.getState().getDead();
+    }
+
     private DockerClient getDefaultConnection() {
         return connections.computeIfAbsent(DEFAULT_CONNECTION, id -> {
             DockerClientConfig config = null;
@@ -109,7 +124,7 @@ public class DockerController {
         if (isWindows) {
             String bind = path2path.substring(0, path2path.lastIndexOf(":"));
             String volume = path2path.substring(path2path.lastIndexOf(":")+1);
-            
+
             return new Bind(bind, new Volume(volume));
         } else {
             return Bind.parse(path2path);
