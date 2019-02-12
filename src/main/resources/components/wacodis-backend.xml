@@ -27,7 +27,10 @@
 
     <bean id="landCoverClassificationAlgorithm" class="org.n52.wacodis.javaps.algorithms.LandCoverClassificationAlgorithm" />
     <bean id="sentinelProcess" class="org.n52.wacodis.javaps.algorithms.SentinelImageDownloadAlgorithm" />
+    <bean id="sentinelGeotiffProcess" class="org.n52.wacodis.javaps.algorithms.Sentinel2ImageToGeoTiffAlgorithm" />
     <bean id="openAccessHubConfig" class="org.n52.wacodis.javaps.configuration.OpenAccessHubConfig" />
+    <bean id="wacodisBackendConfig" class="org.n52.wacodis.javaps.configuration.WacodisBackendConfig" />
+    <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
     
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
 
