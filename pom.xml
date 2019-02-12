@@ -11,7 +11,37 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <version.slf4j>1.7.21</version.slf4j>
         <geotools.version>17.1</geotools.version>
+        <snap.version>6.0.2</snap.version>
+        <s2tbx.version>6.0.2</s2tbx.version>
     </properties>
+    
+        
+    <repositories>
+        <repository>
+            <id>geotools</id>
+            <name>Geotools Repo</name>
+            <url>http://download.osgeo.org/webdav/geotools</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>snap-repo-public</id>
+            <name>Public Maven Repository for SNAP</name>
+            <url>http://nexus.senbox.net/nexus/content/repositories/public/</url>
+            <releases>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <checksumPolicy>warn</checksumPolicy>
+            </snapshots>
+        </repository>
+    </repositories>
     
     <dependencies>   
         <dependency>
@@ -135,6 +165,40 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        
+        <!--SNAP Dependencies --> 
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-runtime</artifactId>
+            <version>${snap.version}</version>
+        </dependency> 
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-core</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-geotiff</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
+        
+        <!--Sentinel-2 Toolbox Dependencies --> 
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-s2msi-reader</artifactId>
+            <version>${s2tbx.version}</version>   
+        </dependency>  
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>lib-openjpeg</artifactId> 
+            <version>${s2tbx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-s2msi-resampler</artifactId> 
+            <version>${s2tbx.version}</version>
+        </dependency>
        
         <dependency>
             <groupId>junit</groupId>
@@ -155,17 +219,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>geotools</id>
-            <name>Geotools Repo</name>
-            <url>http://download.osgeo.org/webdav/geotools</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
