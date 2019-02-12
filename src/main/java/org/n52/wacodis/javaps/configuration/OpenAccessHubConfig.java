@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate;
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 @Configuration
-@PropertySource("classpath:copernicushub.properties")
+@PropertySource("classpath:wacodis-javaps.properties")
 public class OpenAccessHubConfig {
 
     @Value("${openaccesshub.username}")
