@@ -7,7 +7,7 @@ package org.n52.wacodis.javaps.command;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.n52.wacodis.dockerjava.DockerController;
+import org.n52.wacodis.javaps.command.docker.DockerController;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,8 +27,9 @@ public class TestExecuteDockerJavaTestTool {
      * Test of execute method, of class DockerController.
      */
     @Test
+    @Ignore
     public void testExecute() /*throws Exception*/ {
-        DockerController dock = new org.n52.wacodis.dockerjava.DockerController();
+        DockerController dock = new org.n52.wacodis.javaps.command.docker.DockerController();
         dock.setImagename("dlm_docker:wacodis-eo-hackathon");
         dock.setContainername("wacodis-eo-dlm");
         String volumemapping = "/home/ak/Develop/wacodis/public:/public"; //linux
