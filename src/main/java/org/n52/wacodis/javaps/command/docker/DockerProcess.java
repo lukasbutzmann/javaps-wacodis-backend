@@ -5,14 +5,14 @@
  */
 package org.n52.wacodis.javaps.command.docker;
 
-import org.n52.wacodis.javaps.command.Process;
 import org.n52.wacodis.javaps.command.ProcessResult;
+import org.n52.wacodis.javaps.command.ToolExecutionProcess;
 
 /**
  *
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
-public class DockerProcess implements Process{
+public class DockerProcess implements ToolExecutionProcess{
 
     @Override
     public ProcessResult execute() throws InterruptedException {

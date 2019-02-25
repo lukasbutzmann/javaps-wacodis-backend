@@ -9,7 +9,7 @@ package org.n52.wacodis.javaps.command;
  *
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
-public interface Process {
+public interface ToolExecutionProcess {
     
     ProcessResult execute() throws InterruptedException;
     

@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public abstract class AbstractProcessCommand implements Process{
+public abstract class AbstractProcessCommand implements ToolExecutionProcess{
 
     private String processApplication;
 
