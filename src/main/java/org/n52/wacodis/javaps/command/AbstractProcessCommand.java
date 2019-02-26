@@ -12,7 +12,7 @@ import java.util.List;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public abstract class AbstractProcessCommand {
+public abstract class AbstractProcessCommand implements ToolExecutionProcess{
 
     private String processApplication;
 
@@ -23,6 +23,7 @@ public abstract class AbstractProcessCommand {
         this.processApplication = processApplication;
     }
 
+    @Override
     public abstract ProcessResult execute() throws InterruptedException;
 
     public String getProcessApplication() {

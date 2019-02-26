@@ -38,4 +38,8 @@ public class CommandParameter {
         this.value = value;
     }
 
+    @Override
+    public String toString() {
+        return "{param: " + this.name + ", val: " + this.value + "}";
+    }
 }
