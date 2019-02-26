@@ -14,6 +14,8 @@
         <snap.version>6.0.2</snap.version>
         <s2tbx.version>6.0.2</s2tbx.version>
         <jersey.version>2.28</jersey.version>
+        <docker-java.version>3.0.14</docker-java.version>
+        <jax-rs.version>2.1.1</jax-rs.version>
     </properties>
     
         
@@ -235,17 +237,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>geotools</id>
-            <name>Geotools Repo</name>
-            <url>http://download.osgeo.org/webdav/geotools</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
 </project>
