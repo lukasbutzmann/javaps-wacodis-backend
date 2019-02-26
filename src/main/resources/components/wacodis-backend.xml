@@ -31,6 +31,7 @@
     <bean id="openAccessHubConfig" class="org.n52.wacodis.javaps.configuration.OpenAccessHubConfig" />
     <bean id="wacodisBackendConfig" class="org.n52.wacodis.javaps.configuration.WacodisBackendConfig" />
     <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
+    <bean id="sentinel2Preprocesor" class="org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor" />
     
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
 

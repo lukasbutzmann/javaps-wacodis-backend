@@ -5,12 +5,29 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
+import com.bc.ceres.core.PrintWriterProgressMonitor;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import javax.imageio.ImageIO;
+import org.apache.commons.io.FilenameUtils;
+import org.esa.s2tbx.s2msi.resampler.S2Resampler;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Band;
+import org.esa.snap.core.datamodel.Product;
+import org.esa.snap.core.util.ProductUtils;
+import org.esa.snap.runtime.Engine;
 import org.n52.javaps.algorithm.annotation.Algorithm;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.algorithm.annotation.LiteralOutput;
+import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
+import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
+import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
+import org.openide.util.Exceptions;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -28,6 +45,12 @@ import org.springframework.beans.factory.annotation.Autowired;
         storeSupported = true,
         statusSupported = true)
 public class Sentinel2ImageToGeoTiffAlgorithm {
+
+    @Autowired
+    private WacodisBackendConfig config;
+
+    @Autowired
+    private Sentinel2Preprocessor sentinel2Preprocessor;
 
     @Autowired
     private SentinelFileDownloader fileDownloader;
@@ -48,8 +71,20 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
     @Execute
     public void execute() {
-        File file = fileDownloader.downloadSentinelFile(imageUrl);
-        this.product = file.getPath();
+        try {
+
+            File sentinelFile = fileDownloader.downloadSentinelFile(imageUrl);
+
+            String targetFilePath = config.getWorkingDirectory()
+                    + "/" + FilenameUtils.removeExtension(sentinelFile.getName()) + ".tif";
+
+            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor();
+            preprocessor.preprocess(sentinelFile.getPath(), targetFilePath);
+
+            this.product = targetFilePath;
+        } catch (IOException ex) {
+            Exceptions.printStackTrace(ex);
+        }
 
     }
 
