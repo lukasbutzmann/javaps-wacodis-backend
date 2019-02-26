@@ -38,7 +38,6 @@ public class SentinelFileDownloader {
      * the default working directory.
      *
      * @param url URL for the Sentinel-2 image.
-     * @param outPath Output file path
      * @return the file that contains the image
      */
     public File downloadSentinelFile(String url) {
@@ -50,7 +49,7 @@ public class SentinelFileDownloader {
      * the specified location.
      *
      * @param url URL for the Sentinel-2 image.
-     * @param outPath Output file path
+     * @param outPath Path to the directory to save the image file in
      * @return the file that contains the image
      */
     public File downloadSentinelFile(String url, String outPath) {
