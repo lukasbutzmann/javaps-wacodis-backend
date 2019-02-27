@@ -40,6 +40,16 @@ public class CommandParameter {
 
     @Override
     public String toString() {
-        return "{param: " + this.name + ", val: " + this.value + "}";
+        String result = "";
+
+        if (this.name != null && this.value != null) {
+            result = this.name + " " + this.value;
+        } else if (this.name != null) {
+            result += this.name;
+        } else if (this.value != null) {
+            result += this.value;
+        }
+
+        return result.trim();
     }
 }
