@@ -81,9 +81,7 @@ public class WacodisPrototypeToolAlgorithm {
         runConfig.addCommandParameter(new CommandParameter("-training", this.training));
 
         //volumes
-        for (String volume : this.toolConfig.getDockerVolumes()) {
-            runConfig.addVolumeBinding(volume);
-        }
+        runConfig.addVolumeBinding(concatVolumeBinding(this.toolConfig.getHostDataFolder(), "/public"));
 
         return runConfig;
     }
@@ -94,5 +92,9 @@ public class WacodisPrototypeToolAlgorithm {
 
         return new DockerController(hostConfig);
     }
-
+    
+    private String concatVolumeBinding(String hostFolder, String containerFolder){
+        return hostFolder + ":" + containerFolder;
+    }
+    
 }

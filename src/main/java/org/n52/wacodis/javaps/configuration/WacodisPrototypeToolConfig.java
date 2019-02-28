@@ -28,9 +28,6 @@ public class WacodisPrototypeToolConfig {
     
     @Value("${docker.host}")
     private String dockerHost;
-    
-     @Value("${docker.container.volumes}")
-    private String dockerVolumes;
 
     public String getDockerImage() {
         return dockerImage;
@@ -47,9 +44,5 @@ public class WacodisPrototypeToolConfig {
     public String getDockerHost() {
         return dockerHost;
     }   
-
-    public String[] getDockerVolumes() {
-        return dockerVolumes.split(",");
-    }
 
 }
