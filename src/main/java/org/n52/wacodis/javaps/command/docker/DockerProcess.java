@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- *
+ * runs docker container
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
 public class DockerProcess implements ToolExecutionProcess {

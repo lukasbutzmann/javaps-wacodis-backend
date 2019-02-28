@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.n52.wacodis.javaps.command;
+package org.n52.wacodis.javaps.command.docker;
 
 import com.github.dockerjava.api.command.CreateContainerResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
@@ -13,9 +13,7 @@ import com.github.dockerjava.core.command.EventsResultCallback;
 import java.util.concurrent.CountDownLatch;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.n52.wacodis.javaps.command.docker.DockerController;
-import org.n52.wacodis.javaps.command.docker.DockerContainer;
-import org.n52.wacodis.javaps.command.docker.DockerRunCommandConfiguration;
+import org.n52.wacodis.javaps.command.CommandParameter;
 
 /**
  *

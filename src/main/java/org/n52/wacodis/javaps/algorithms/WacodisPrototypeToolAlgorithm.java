@@ -5,15 +5,14 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import org.n52.javaps.algorithm.annotation.Execute;
-import org.n52.wacodis.javaps.command.AbstractProcessCommand;
+import com.github.dockerjava.core.DefaultDockerClientConfig;
 import org.n52.wacodis.javaps.command.CommandParameter;
-import org.n52.wacodis.javaps.command.ProcessCommand;
 import org.n52.wacodis.javaps.command.ProcessResult;
-import org.n52.wacodis.javaps.configuration.WacodisTestToolConfig;
+import org.n52.wacodis.javaps.command.docker.DockerContainer;
+import org.n52.wacodis.javaps.command.docker.DockerController;
+import org.n52.wacodis.javaps.command.docker.DockerProcess;
+import org.n52.wacodis.javaps.command.docker.DockerRunCommandConfiguration;
+import org.n52.wacodis.javaps.configuration.WacodisPrototypeToolConfig;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -25,14 +24,12 @@ public class WacodisPrototypeToolAlgorithm {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(WacodisPrototypeToolAlgorithm.class);
 
-    private static final String APPLICATION = "docker run";
-
     private String input;
     private String training;
     private String result;
 
     @Autowired
-    private WacodisTestToolConfig toolConfig;
+    private WacodisPrototypeToolConfig toolConfig;
 
     public String getInput() {
         return input;
@@ -58,40 +55,44 @@ public class WacodisPrototypeToolAlgorithm {
         this.result = result;
     }
 
-    
-    public ProcessResult executeTool() throws InterruptedException {    
-        AbstractProcessCommand cmd = new ProcessCommand(APPLICATION);
-        cmd.setParameter(getParameters());
+    public ProcessResult executeTool() throws InterruptedException {
+        DockerController controller = initDockerController();
+        DockerRunCommandConfiguration runConfig = initRunConfiguration();
+        DockerContainer container = new DockerContainer(this.toolConfig.getDockerContainerName(), this.toolConfig.getDockerImage());
 
-        ProcessResult pr = cmd.execute();
+        DockerProcess toolProcess = new DockerProcess(controller, container, runConfig);
+
+        ProcessResult pr = toolProcess.execute();
         return pr;
     }
-    
+
     //@Execute
     //public void execute(){}
     
-    private List<CommandParameter> getParameters() {
-        List<CommandParameter> parameters = new ArrayList<>();
+    
+    private DockerRunCommandConfiguration initRunConfiguration() {
+        DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 
-        parameters.add(new CommandParameter("--name", this.toolConfig.getDockerContainerName())); //name
-        parameters.add(new CommandParameter("-v", concatVolumeMapping(this.toolConfig.getHostDataFolder(), "/public"))); //volume binding
-        parameters.add(new CommandParameter("-i", "")); //interactive (flag)
-        if (this.toolConfig.isRemoveDockerContainer()) { //remove (flag)
-            parameters.add(new CommandParameter("--rm",""));
+        //cmd 
+        runConfig.addCommandParameter(new CommandParameter("", "/bin/ash"));
+        runConfig.addCommandParameter(new CommandParameter("", "/eo.sh"));
+        runConfig.addCommandParameter(new CommandParameter("-input", this.input));
+        runConfig.addCommandParameter(new CommandParameter("-result", this.result));
+        runConfig.addCommandParameter(new CommandParameter("-training", this.training));
+
+        //volumes
+        for (String volume : this.toolConfig.getDockerVolumes()) {
+            runConfig.addVolumeBinding(volume);
         }
-        parameters.add(new CommandParameter("", this.toolConfig.getDockerImage())); //image (unnamed parameter)
-        parameters.add(new CommandParameter("","bin/ash /eo.sh"));  //command (unamed parameter)
-        parameters.add(new CommandParameter("-input", this.input)); //command_input
-        parameters.add(new CommandParameter("-result", this.result)); //command_result
-        parameters.add(new CommandParameter("-training", this.training)); //command_trainig
-        
-        LOGGER.debug("created parameter list for WacodisTestTool: " + parameters.toString());
 
-        return parameters;
+        return runConfig;
     }
-    
-    private String concatVolumeMapping(String hostFolder, String containerFolder){
-        return hostFolder + ":" + containerFolder;
+
+    private DockerController initDockerController() {
+        DefaultDockerClientConfig hostConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                        .withDockerHost(this.toolConfig.getDockerHost()).build();
+
+        return new DockerController(hostConfig);
     }
-    
+
 }

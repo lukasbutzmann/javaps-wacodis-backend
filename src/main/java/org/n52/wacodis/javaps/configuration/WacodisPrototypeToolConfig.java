@@ -14,8 +14,8 @@ import org.springframework.context.annotation.PropertySource;
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
 @Configuration
-@PropertySource("classpath:wacodistesttool.properties")
-public class WacodisTestToolConfig {
+@PropertySource("classpath:wacodisprototypetool.properties")
+public class WacodisPrototypeToolConfig {
     
     @Value("${docker.image}")
     private String dockerImage;
@@ -23,11 +23,14 @@ public class WacodisTestToolConfig {
     @Value("${docker.container.name}")
     private String dockerContainerName;
     
-    @Value("${docker.container.remove}")
-    private boolean removeDockerContainer;
-    
     @Value("${docker.data.hostfolder}")
     private String hostDataFolder;
+    
+    @Value("${docker.host}")
+    private String dockerHost;
+    
+     @Value("${docker.container.volumes}")
+    private String dockerVolumes;
 
     public String getDockerImage() {
         return dockerImage;
@@ -37,11 +40,16 @@ public class WacodisTestToolConfig {
         return dockerContainerName;
     }
 
-    public boolean isRemoveDockerContainer() {
-        return removeDockerContainer;
-    }
-
     public String getHostDataFolder() {
         return hostDataFolder;
     }
+
+    public String getDockerHost() {
+        return dockerHost;
+    }   
+
+    public String[] getDockerVolumes() {
+        return dockerVolumes.split(",");
+    }
+
 }

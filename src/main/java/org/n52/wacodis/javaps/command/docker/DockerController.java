@@ -25,7 +25,7 @@ import java.util.concurrent.CountDownLatch;
 import org.n52.wacodis.javaps.command.ProcessResult;
 
 /**
- * create connection to docker deamon,
+ * create connection to docker host,
  * control docker container (create, run, stop, insepct, retrieve log, remove)
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  * @author <a href="mailto:adrian.klink@eftas.com">Adrian Klink</a>
@@ -36,13 +36,16 @@ public class DockerController {
 
     private final DockerClient dockerClient;
 
+    /**
+     * connection to default docker host
+     */
     public DockerController() {
         this.dockerClient = getDefaultConnection();
     }
 
-//    public DockerController(Object config) {
-//        //this.dockerClient = getCustomConnection();
-//    }
+    public DockerController(DockerClientConfig clientConfig) {
+        this.dockerClient = DockerClientBuilder.getInstance(clientConfig).build();
+    }
 
     /**
      * execute create container command
