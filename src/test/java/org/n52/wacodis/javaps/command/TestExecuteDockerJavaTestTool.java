@@ -38,7 +38,7 @@ public class TestExecuteDockerJavaTestTool {
 
         DockerController dockCont = new org.n52.wacodis.javaps.command.docker.DockerController();
 
-        DockerContainer container = new DockerContainer("wacodis-eo-dlm", "hello-world:latest" /*"dlm_docker:wacodis-eo-hackathon"*/);
+        DockerContainer container = new DockerContainer("wacodis-eo-dlm", "dlm_docker:wacodis-eo-hackathon");
         DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 
         String volumemapping = "/home/ak/Develop/wacodis/public:/public"; //linux
