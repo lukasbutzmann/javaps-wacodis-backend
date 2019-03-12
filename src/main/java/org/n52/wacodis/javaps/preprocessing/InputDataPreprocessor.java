@@ -13,5 +13,5 @@ import java.io.IOException;
  */
 public interface InputDataPreprocessor {
 
-    public void preprocess(String inputFilePath, String outputFilePath) throws IOException;
+    public void preprocess(String inputFilePath, String outputPath) throws IOException;
 }

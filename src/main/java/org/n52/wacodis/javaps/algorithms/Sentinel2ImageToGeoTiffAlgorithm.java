@@ -75,13 +75,12 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
             File sentinelFile = fileDownloader.downloadSentinelFile(imageUrl);
 
-            String targetFilePath = config.getWorkingDirectory()
-                    + "/" + FilenameUtils.removeExtension(sentinelFile.getName()) + ".tif";
+            String targetDirectory = config.getWorkingDirectory();
 
-            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor();
-            preprocessor.preprocess(sentinelFile.getPath(), targetFilePath);
+            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
+            preprocessor.preprocess(sentinelFile.getPath(), targetDirectory);
 
-            this.product = targetFilePath;
+            this.product = targetDirectory;
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
