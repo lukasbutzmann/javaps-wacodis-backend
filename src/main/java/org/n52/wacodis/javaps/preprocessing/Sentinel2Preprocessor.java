@@ -6,10 +6,13 @@
 package org.n52.wacodis.javaps.preprocessing;
 
 import com.bc.ceres.core.PrintWriterProgressMonitor;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.io.FilenameUtils;
@@ -34,6 +37,15 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor {
     private boolean useAllBands;
 
     /**
+     * Constructs a new default Sentinel-2 preprocessor that only considers the
+     * bands for the highest spatial resolution
+     *
+     */
+    public Sentinel2Preprocessor() {
+
+    }
+
+    /**
      * Constructs a new Sentinel-2 preprocessor
      *
      * @param useAllBands indicates whether to consider all spectral bands for
@@ -45,7 +57,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor {
     }
 
     @Override
-    public void preprocess(String inputFilePath, String outputDirectoryPath) throws IOException {
+    public List<File> preprocess(String inputFilePath, String outputDirectoryPath) throws IOException {
         Product inProduct = ProductIO.readProduct(inputFilePath);
 
         Band[] bands = inProduct.getBands();
@@ -56,25 +68,10 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor {
         Map<Integer, Set<Band>> bandMap = groupSpectralRasterBands(bands);
 
         if (useAllBands) {
-            createGeotiffForAllBandResolutions(bandMap, inProduct, productName, outputDirectoryPath);
+            return createGeotiffForAllBandResolutions(bandMap, inProduct, productName, outputDirectoryPath);
         } else {
-            createGeotiffForHighestBandResolution(bandMap, inProduct, productName, outputDirectoryPath);
+            return createGeotiffForHighestBandResolution(bandMap, inProduct, productName, outputDirectoryPath);
         }
-    }
-
-    private void createGeotiffForAllBandResolutions(Map<Integer, Set<Band>> bandMap, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
-        for (int key : bandMap.keySet()) {
-            createMultispectralGeotiff(
-                    bandMap.get(key), inProduct,
-                    productName + "_" + String.valueOf(key),
-                    outputDirectoryPath);
-        }
-    }
-
-    private void createGeotiffForHighestBandResolution(Map<Integer, Set<Band>> bandMap, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
-        Set<Band> highResBands = bandMap.get(Collections.max(bandMap.keySet()));
-
-        createMultispectralGeotiff(highResBands, inProduct, productName, outputDirectoryPath);
     }
 
     private Map<Integer, Set<Band>> groupSpectralRasterBands(Band[] bands) {
@@ -99,7 +96,28 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor {
         return bandMap;
     }
 
-    private void createMultispectralGeotiff(Set<Band> bands, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
+    private List<File> createGeotiffForAllBandResolutions(Map<Integer, Set<Band>> bandMap, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
+        List<File> fileList = new ArrayList();
+        for (int key : bandMap.keySet()) {
+            fileList.add(
+                    createMultispectralGeotiff(
+                            bandMap.get(key), inProduct,
+                            productName + "_" + String.valueOf(key),
+                            outputDirectoryPath)
+            );
+        }
+        return fileList;
+    }
+
+    private List<File> createGeotiffForHighestBandResolution(Map<Integer, Set<Band>> bandMap, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
+        List<File> fileList = new ArrayList();
+        Set<Band> highResBands = bandMap.get(Collections.max(bandMap.keySet()));
+
+        fileList.add(createMultispectralGeotiff(highResBands, inProduct, productName, outputDirectoryPath));
+        return fileList;
+    }
+
+    private File createMultispectralGeotiff(Set<Band> bands, Product inProduct, String productName, String outputDirectoryPath) throws IOException {
         Product outProduct = new Product(productName, GEOTIFF_TYPE);
 
         bands.forEach(b -> {
@@ -111,12 +129,15 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor {
 
         PrintWriterProgressMonitor monitor = new PrintWriterProgressMonitor(System.out);
 
+        String outFilePath = FilenameUtils.concat(outputDirectoryPath, productName + TIFF_FILE_EXTENSION);
+
         ProductIO.writeProduct(
                 outProduct,
-                FilenameUtils.concat(outputDirectoryPath, productName + TIFF_FILE_EXTENSION),
+                outFilePath,
                 GEOTIFF_TYPE,
                 monitor
         );
+        return new File(outFilePath);
     }
 
 }

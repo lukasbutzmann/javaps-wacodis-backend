@@ -5,7 +5,9 @@
  */
 package org.n52.wacodis.javaps.preprocessing;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  *
@@ -13,5 +15,14 @@ import java.io.IOException;
  */
 public interface InputDataPreprocessor {
 
-    public void preprocess(String inputFilePath, String outputPath) throws IOException;
+    /**
+     * Applies preprocessing on input data and stores the preprocessed at
+     *
+     * @param inputFilePath path to the input data
+     * @param outputDirectoryPath path to the directory for storing the
+     * preprocessed data
+     * @return list of preprocessed files
+     * @throws IOException
+     */
+    public List<File> preprocess(String inputFilePath, String outputDirectoryPath) throws IOException;
 }

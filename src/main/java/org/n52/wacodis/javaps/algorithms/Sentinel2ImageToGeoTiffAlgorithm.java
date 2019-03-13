@@ -9,6 +9,7 @@ import com.bc.ceres.core.PrintWriterProgressMonitor;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import javax.imageio.ImageIO;
 import org.apache.commons.io.FilenameUtils;
 import org.esa.s2tbx.s2msi.resampler.S2Resampler;
@@ -78,9 +79,9 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
             String targetDirectory = config.getWorkingDirectory();
 
             InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
-            preprocessor.preprocess(sentinelFile.getPath(), targetDirectory);
+            List<File> outputs = preprocessor.preprocess(sentinelFile.getPath(), targetDirectory);
 
-            this.product = targetDirectory;
+            this.product = outputs.get(0).getName();
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
