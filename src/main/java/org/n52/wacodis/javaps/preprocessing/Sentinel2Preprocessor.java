@@ -28,7 +28,7 @@ import org.esa.snap.core.util.ProductUtils;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public class Sentinel2Preprocessor implements InputDataPreprocessor {
+public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
 
     private static final String TIFF_FILE_EXTENSION = ".tif";
 

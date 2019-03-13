@@ -13,7 +13,7 @@ import java.util.List;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public interface InputDataPreprocessor {
+public interface InputDataPreprocessor<T> {
 
     /**
      * Applies preprocessing on input data and stores the preprocessed at
@@ -24,5 +24,5 @@ public interface InputDataPreprocessor {
      * @return list of preprocessed files
      * @throws IOException
      */
-    public List<File> preprocess(String inputFilePath, String outputDirectoryPath) throws IOException;
+    public List<File> preprocess(T inputFilePath, String outputDirectoryPath) throws IOException;
 }
