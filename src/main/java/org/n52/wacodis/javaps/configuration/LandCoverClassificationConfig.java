@@ -15,17 +15,14 @@ import org.springframework.context.annotation.PropertySource;
  */
 @Configuration
 @PropertySource("classpath:wacodisprototypetool.properties")
-public class WacodisPrototypeToolConfig {
+public class LandCoverClassificationConfig {
     
     @Value("${docker.image}")
     private String dockerImage;
     
     @Value("${docker.container.name}")
     private String dockerContainerName;
-    
-    @Value("${docker.data.hostfolder}")
-    private String hostDataFolder;
-    
+   
     @Value("${docker.host}")
     private String dockerHost;
 
@@ -35,10 +32,6 @@ public class WacodisPrototypeToolConfig {
 
     public String getDockerContainerName() {
         return dockerContainerName;
-    }
-
-    public String getHostDataFolder() {
-        return hostDataFolder;
     }
 
     public String getDockerHost() {

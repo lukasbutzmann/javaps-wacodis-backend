@@ -5,14 +5,30 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.n52.javaps.algorithm.annotation.Algorithm;
 import org.n52.javaps.algorithm.annotation.ComplexInput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.algorithm.annotation.LiteralOutput;
+import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.n52.wacodis.javaps.algorithms.execution.LandCoverClassificationExecutor;
+import org.n52.wacodis.javaps.command.ProcessResult;
+import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
+import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
+import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
+import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
+import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
+import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  *
@@ -27,11 +43,24 @@ import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
         statusSupported = true)
 public class LandCoverClassificationAlgorithm {
 
+    private static final String TIFF_EXTENSION = ".tif";
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
+
+    @Autowired
+    private SentinelFileDownloader sentinelDownloader;
+
+    @Autowired
+    private WacodisBackendConfig config;
+
+    @Autowired
+    private LandCoverClassificationConfig toolConfig;
+
     private String opticalImagesSourceType;
     private List<String> opticalImagesSources;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
-    private String product;
+    private List<String> products;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -50,8 +79,7 @@ public class LandCoverClassificationAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 10,
-            defaultValue = "Sentinel-2")
+            maxOccurs = 10)
     public void setOpticalImagesSources(List<String> value) {
         this.opticalImagesSources = value;
     }
@@ -81,21 +109,57 @@ public class LandCoverClassificationAlgorithm {
     }
 
     @Execute
-    public void execute() {
-        //TODO Resolve ID for optical images and fetch images as GeoTIFF
+    public void execute() throws WacodisProcessingException{
+        this.products = new ArrayList();
+        String workingDirectory = config.getWorkingDirectory();
+        //TODO preprocess training data
+        String trainingData = "path/to/training/data";
 
-        //TODO Resolve 
-        String sources = String.join(",", opticalImagesSources);
-        String references = referenceData.getBounds().toString();
-        this.product = String.join("|",
-                "Optical images source type:" + opticalImagesSourceType,
-                "Optical images source:" + sources,
-                "Reference data type:" + referenceDataType,
-                "Reference data bounding box:" + references);
+        // Download satellite data
+        opticalImagesSources.forEach(imageSource -> {
+            File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                    imageSource,
+                    workingDirectory);
+
+            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
+            try {
+                // convert sentinel images to GeoTIFF files
+                List<File> outputs = preprocessor.preprocess(
+                        sentinelFile.getPath(),
+                        workingDirectory);
+
+                if (!outputs.isEmpty()) {
+                    String resultId = UUID.randomUUID().toString();
+                    LandCoverClassificationExecutor executor
+                            = new LandCoverClassificationExecutor(
+                                    workingDirectory,
+                                    outputs.get(0).getName(),
+                                    trainingData,
+                                    resultId + TIFF_EXTENSION, toolConfig);
+                    ProcessResult result = executor.executeTool();
+                    if(result.getResultCode() == 0){
+                        this.products.add(resultId);
+                    }
+                    LOGGER.info("Land classification docker process finished "
+                            + "executing with result code: {}", result.getResultCode());
+                    LOGGER.debug(result.getOutputMessage());
+                }
+
+            } catch (IOException ex) {
+                LOGGER.error(ex.getMessage());
+                LOGGER.debug("Error while processing sentinel file: "
+                        + sentinelFile.getName(), ex);
+            } catch (InterruptedException ex) {
+                LOGGER.error(ex.getMessage());
+                LOGGER.debug("Error while executing land cover docker process", ex);
+            }
+        });
+
     }
+
     @LiteralOutput(identifier = "PRODUCT")
-    public String getOutput() {
-        return this.product;
+    public List<String> getOutput() {
+        return this.products;
     }
 
 }
