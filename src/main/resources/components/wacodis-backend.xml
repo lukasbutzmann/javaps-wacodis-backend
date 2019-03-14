@@ -30,6 +30,7 @@
     <bean id="sentinelGeotiffProcess" class="org.n52.wacodis.javaps.algorithms.Sentinel2ImageToGeoTiffAlgorithm" />
     <bean id="openAccessHubConfig" class="org.n52.wacodis.javaps.configuration.OpenAccessHubConfig" />
     <bean id="wacodisBackendConfig" class="org.n52.wacodis.javaps.configuration.WacodisBackendConfig" />
+    <bean id="landcoverClassificationConfig"  class="org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig" />
     <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
     <bean id="sentinel2Preprocesor" class="org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor" />
     

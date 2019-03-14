@@ -24,6 +24,7 @@ import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
+import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
 import org.openide.util.Exceptions;
 import org.slf4j.Logger;
@@ -109,11 +110,21 @@ public class LandCoverClassificationAlgorithm {
     }
 
     @Execute
-    public void execute() throws WacodisProcessingException{
+    public void execute() throws WacodisProcessingException {
         this.products = new ArrayList();
         String workingDirectory = config.getWorkingDirectory();
+
         //TODO preprocess training data
-        String trainingData = "path/to/training/data";
+        String trainingData = "path/to/trainingdata";
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor();
+        try {
+            List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
+            File refData = referenceDataFiles.get(0); //.shp
+        } catch (IOException ex) {
+            String message = "Error while preprocessing reference data";
+            LOGGER.debug(message, ex);
+            throw new WacodisProcessingException(message, ex);
+        }
 
         // Download satellite data
         opticalImagesSources.forEach(imageSource -> {
@@ -121,10 +132,10 @@ public class LandCoverClassificationAlgorithm {
                     imageSource,
                     workingDirectory);
 
-            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
+            InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false);
             try {
                 // convert sentinel images to GeoTIFF files
-                List<File> outputs = preprocessor.preprocess(
+                List<File> outputs = imagePreprocessor.preprocess(
                         sentinelFile.getPath(),
                         workingDirectory);
 
@@ -137,7 +148,7 @@ public class LandCoverClassificationAlgorithm {
                                     trainingData,
                                     resultId + TIFF_EXTENSION, toolConfig);
                     ProcessResult result = executor.executeTool();
-                    if(result.getResultCode() == 0){
+                    if (result.getResultCode() == 0) {
                         this.products.add(resultId);
                     }
                     LOGGER.info("Land classification docker process finished "
@@ -158,8 +169,8 @@ public class LandCoverClassificationAlgorithm {
     }
 
     @LiteralOutput(identifier = "PRODUCT")
-    public List<String> getOutput() {
-        return this.products;
+    public String getOutput() {
+        return this.products.get(0); //ToDo return List
     }
 
 }

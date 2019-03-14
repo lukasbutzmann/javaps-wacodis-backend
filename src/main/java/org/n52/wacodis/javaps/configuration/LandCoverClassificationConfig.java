@@ -14,7 +14,7 @@ import org.springframework.context.annotation.PropertySource;
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
 @Configuration
-@PropertySource("classpath:wacodisprototypetool.properties")
+@PropertySource("classpath:landcoverclassification.properties")
 public class LandCoverClassificationConfig {
     
     @Value("${docker.image}")
