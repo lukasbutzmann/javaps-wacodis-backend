@@ -51,6 +51,9 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     private String epsg;
 
+    /**
+     * @param epsg set srs for resulting shapefile, assumes WGS84 if not set
+     */
     public ReferenceDataPreprocessor(String epsg) {
         this.epsg = epsg;
     }
@@ -62,15 +65,19 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
         return epsg;
     }
 
+    /**
+     * set srs for resulting shapefile, assumes WGS84 if not set
+     * @param epsg 
+     */
     public void setEpsg(String epsg) {
         this.epsg = epsg;
     }
 
     /**
-     *
-     * @param inputCollection
-     * @param outputDirectoryPath
-     * @return
+     * writes a SimpleFeatureCollection to a Shapefile,
+     * @param inputCollection features must have a attribute 'class' of type Long or Integer
+     * @param outputDirectoryPath specifies the directory in which to store the resulting files
+     * @return array of File comprising all parts of a shapefile, order: [shp, shx, dbf, prj, fix], filenames are randomized
      * @throws IOException
      */
     @Override
@@ -185,19 +192,24 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     
 
     
-
+    /**
+     * get schema for landclassification training data
+     * @return 
+     */
     public SimpleFeatureType retrieveDefaultSchema() {
         CoordinateReferenceSystem crs = determineCRS();
         return createReferenceDataFeatureType(crs, null); //MultiPolygon
     }
+    
 
     /**
      * schema for landcover classification training data
      *
      * @param crs
+     * @param geometryBinding binding for geometry attribute, assume MultiPolygon if null
      * @return
      */
-    private SimpleFeatureType createReferenceDataFeatureType(CoordinateReferenceSystem crs, Class geometryBinding) {
+    private SimpleFeatureType createReferenceDataFeatureType(CoordinateReferenceSystem crs, Class geometryBinding){
         if(geometryBinding == null){
             geometryBinding = MultiPolygon.class;
             LOGGER.warn("geometry binding not set, assume MultiPolygon");
@@ -215,6 +227,9 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     }
     
 
+    /**
+     * @return CoordinateReferenceSystem for this.epsg or WGS84 if this.epsg is not set or unparsable
+     */
     private CoordinateReferenceSystem determineCRS() {
         CoordinateReferenceSystem crs;
 
@@ -241,6 +256,11 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
         return crs;
     }
 
+    /**
+     * generate randomized file identifiers for output files (parts of the shapefile)
+     * @param outputDirectoryPath
+     * @return 
+     */
     private File[] generateOutputFileNames(String outputDirectoryPath) {
         UUID fileIdentifier = UUID.randomUUID();
         File[] outputFiles = new File[SHAPEFILE_EXTENSIONS.length];

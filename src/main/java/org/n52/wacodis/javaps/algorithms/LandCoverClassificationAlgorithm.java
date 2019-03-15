@@ -114,58 +114,59 @@ public class LandCoverClassificationAlgorithm {
         this.products = new ArrayList();
         String workingDirectory = config.getWorkingDirectory();
 
-        //TODO preprocess training data
-        String trainingData = "path/to/trainingdata";
+        //TODO preprocess training data for each input image (need to adjust wps input)
         InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor();
         try {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             File refData = referenceDataFiles.get(0); //.shp
+            String trainingData = refData.getName();
+
+            // Download satellite data
+            opticalImagesSources.forEach(imageSource -> {
+                File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                        imageSource,
+                        workingDirectory);
+
+                InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false);
+                try {
+                    // convert sentinel images to GeoTIFF files
+                    List<File> outputs = imagePreprocessor.preprocess(
+                            sentinelFile.getPath(),
+                            workingDirectory);
+
+                    if (!outputs.isEmpty()) {
+                        String resultId = UUID.randomUUID().toString();
+                        LandCoverClassificationExecutor executor
+                                = new LandCoverClassificationExecutor(
+                                        workingDirectory,
+                                        outputs.get(0).getName(),
+                                        trainingData,
+                                        resultId + TIFF_EXTENSION, toolConfig);
+                        ProcessResult result = executor.executeTool();
+                        if (result.getResultCode() == 0) {
+                            this.products.add(resultId);
+                        }
+                        LOGGER.info("Land classification docker process finished "
+                                + "executing with result code: {}", result.getResultCode());
+                        LOGGER.debug(result.getOutputMessage());
+                    }
+
+                } catch (IOException ex) {
+                    LOGGER.error(ex.getMessage());
+                    LOGGER.debug("Error while processing sentinel file: "
+                            + sentinelFile.getName(), ex);
+                } catch (InterruptedException ex) {
+                    LOGGER.error(ex.getMessage());
+                    LOGGER.debug("Error while executing land cover docker process", ex);
+                }
+
+            });
+            
         } catch (IOException ex) {
             String message = "Error while preprocessing reference data";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
-
-        // Download satellite data
-        opticalImagesSources.forEach(imageSource -> {
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    imageSource,
-                    workingDirectory);
-
-            InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false);
-            try {
-                // convert sentinel images to GeoTIFF files
-                List<File> outputs = imagePreprocessor.preprocess(
-                        sentinelFile.getPath(),
-                        workingDirectory);
-
-                if (!outputs.isEmpty()) {
-                    String resultId = UUID.randomUUID().toString();
-                    LandCoverClassificationExecutor executor
-                            = new LandCoverClassificationExecutor(
-                                    workingDirectory,
-                                    outputs.get(0).getName(),
-                                    trainingData,
-                                    resultId + TIFF_EXTENSION, toolConfig);
-                    ProcessResult result = executor.executeTool();
-                    if (result.getResultCode() == 0) {
-                        this.products.add(resultId);
-                    }
-                    LOGGER.info("Land classification docker process finished "
-                            + "executing with result code: {}", result.getResultCode());
-                    LOGGER.debug(result.getOutputMessage());
-                }
-
-            } catch (IOException ex) {
-                LOGGER.error(ex.getMessage());
-                LOGGER.debug("Error while processing sentinel file: "
-                        + sentinelFile.getName(), ex);
-            } catch (InterruptedException ex) {
-                LOGGER.error(ex.getMessage());
-                LOGGER.debug("Error while executing land cover docker process", ex);
-            }
-        });
-
     }
 
     @LiteralOutput(identifier = "PRODUCT")
