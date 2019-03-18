@@ -45,6 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LandCoverClassificationAlgorithm {
 
     private static final String TIFF_EXTENSION = ".tif";
+    private static final String REFERENCEDATA_EPSG = "EPSG:32632";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
@@ -115,7 +116,7 @@ public class LandCoverClassificationAlgorithm {
         String workingDirectory = config.getWorkingDirectory();
 
         //TODO preprocess training data for each input image (need to adjust wps input)
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor();
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG); //set spatial reference system, TODO: detect srs from input data
         try {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             File refData = referenceDataFiles.get(0); //.shp
