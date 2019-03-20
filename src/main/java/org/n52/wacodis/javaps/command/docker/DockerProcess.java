@@ -67,9 +67,11 @@ public class DockerProcess implements ToolExecutionProcess {
         String containerID = createdContainer.getId();
         
         //run container synchronously, remove container after execution
-        ProcessResult results = this.dockerController.runDockerContainer_Sync(containerID);
-        this.dockerController.removeDockerContainer(containerID);
-        
-        return results;
+        try{        
+            ProcessResult results = this.dockerController.runDockerContainer_Sync(containerID);
+            return results;
+        }finally{
+            this.dockerController.removeDockerContainer(containerID); //make sure container is removed in any case
+        }
     }
 }

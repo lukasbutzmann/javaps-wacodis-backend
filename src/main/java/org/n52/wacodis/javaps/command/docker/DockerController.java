@@ -25,8 +25,9 @@ import java.util.concurrent.CountDownLatch;
 import org.n52.wacodis.javaps.command.ProcessResult;
 
 /**
- * create connection to docker host,
- * control docker container (create, run, stop, insepct, retrieve log, remove)
+ * create connection to docker host, control docker container (create, run,
+ * stop, insepct, retrieve log, remove)
+ *
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  * @author <a href="mailto:adrian.klink@eftas.com">Adrian Klink</a>
  */
@@ -49,6 +50,7 @@ public class DockerController {
 
     /**
      * execute create container command
+     *
      * @param container
      * @param runConfig
      * @return
@@ -67,6 +69,7 @@ public class DockerController {
 
     /**
      * execute run container command asynchronously
+     *
      * @param containerID
      */
     public void runDockerContainer(String containerID) {
@@ -75,21 +78,23 @@ public class DockerController {
     }
 
     /**
-     * execute run container command asynchronously,
-     * calls containerDiesHandler when die event (stoppped, finished) is raised
+     * execute run container command asynchronously, calls containerDiesHandler
+     * when die event (stoppped, finished) is raised
+     *
      * @param containerID
-     * @param containerDiesHandler 
+     * @param containerDiesHandler
      */
     public void runDockerContainer(String containerID, EventsResultCallback containerDiesHandler) {
         this.runDockerContainer(containerID, containerDiesHandler, "die");
     }
 
     /**
-     * execute run container command asynchronously,
-     * calls containerDiesHandler when container event is raised that matches eventFilter
+     * execute run container command asynchronously, calls containerDiesHandler
+     * when container event is raised that matches eventFilter
+     *
      * @param containerID
      * @param containerEventHandler
-     * @param eventFilter 
+     * @param eventFilter
      */
     public void runDockerContainer(String containerID, EventsResultCallback containerEventHandler, String... eventFilter) {
         this.dockerClient.eventsCmd().withContainerFilter(containerID).withEventFilter(eventFilter).exec(containerEventHandler);
@@ -97,11 +102,12 @@ public class DockerController {
     }
 
     /**
-     * execute run container command synchronously
-     * threads blocks until container dies (stopped, finished)
+     * execute run container command synchronously threads blocks until
+     * container dies (stopped, finished)
+     *
      * @param containerID
      * @return ProcessResult containing container exit code and container log
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public ProcessResult runDockerContainer_Sync(String containerID) throws InterruptedException {
         String log;
@@ -127,7 +133,8 @@ public class DockerController {
 
     /**
      * run remove container command
-     * @param containerID 
+     *
+     * @param containerID
      */
     public void removeDockerContainer(String containerID) {
         LOGGER.info("remove docker container with container id " + containerID);
@@ -136,7 +143,8 @@ public class DockerController {
 
     /**
      * run stop container command
-     * @param containerID 
+     *
+     * @param containerID
      */
     public void stopDockerContainer(String containerID) {
         LOGGER.info("stop docker container with container id " + containerID);
@@ -145,6 +153,7 @@ public class DockerController {
 
     /**
      * run inspect container command
+     *
      * @param containerID
      * @return snapshot of current container state
      */
@@ -153,11 +162,11 @@ public class DockerController {
     }
 
     /**
-     * run log container command asynchronously,
-     * calls logHandler when log was retrieved,
-     * log represents the current state (snapshot) of the log file
+     * run log container command asynchronously, calls logHandler when log was
+     * retrieved, log represents the current state (snapshot) of the log file
+     *
      * @param containerID
-     * @param logHandler 
+     * @param logHandler
      */
     public void retrieveDockerContainerLog(String containerID, ResultCallback<Frame> logHandler) {
         LOGGER.info("retrieve log for container with container id " + containerID);
@@ -169,12 +178,12 @@ public class DockerController {
     }
 
     /**
-     * run log container command synchronously,
-     * thread blocks until log was retrieved,
-     * log represents the current state (snapshot) of the log file
+     * run log container command synchronously, thread blocks until log was
+     * retrieved, log represents the current state (snapshot) of the log file
+     *
      * @param containerID
      * @return current content of container log (snapshot)
-     * @throws InterruptedException 
+     * @throws InterruptedException
      */
     public String retrieveDockerContainerLog_Sync(String containerID) throws InterruptedException {
         CountDownLatch logLatch = new CountDownLatch(1); //wait until command returns
@@ -234,9 +243,6 @@ public class DockerController {
         }
     }
 
-    
-    
-
     /**
      * only use for EventType 'CONTAINER' and Action 'die' add filters for
      * container id, EventType and Action when registering callback does not
@@ -257,17 +263,19 @@ public class DockerController {
 
         @Override
         public void onNext(Event event) {
-            String containerID = event.getId();
+            try {
+                String containerID = event.getId();
 
-            LOGGER.info("received die event for container " + containerID + System.lineSeparator() + event.toString());
+                LOGGER.info("received die event for container " + containerID + System.lineSeparator() + event.toString());
 
-            if (event.getActor().getAttributes() != null && event.getActor().getAttributes().containsKey("exitCode")) {
-                this.exitCode = Integer.parseInt(event.getActor().getAttributes().get("exitCode"));
-            } else {
-                LOGGER.warn("exit code for container " + containerID + "unknown, using default value " + exitCode);
+                if (event.getActor().getAttributes() != null && event.getActor().getAttributes().containsKey("exitCode")) {
+                    this.exitCode = Integer.parseInt(event.getActor().getAttributes().get("exitCode"));
+                } else {
+                    LOGGER.warn("exit code for container " + containerID + "unknown, using default value " + exitCode);
+                }
+            }finally{
+                this.runLatch.countDown();
             }
-
-            this.runLatch.countDown();
         }
     }
 
@@ -290,19 +298,19 @@ public class DockerController {
 
         @Override
         public void onNext(Frame frame) {
-            logBuilder.append(new String(frame.getPayload(), StandardCharsets.UTF_8));
+            this.logBuilder.append(new String(frame.getPayload(), StandardCharsets.UTF_8));
         }
 
         @Override
         public void onError(Throwable throwable) {
             LOGGER.error("error occured while retrieving log for container: " + containerID, throwable);
-            logLatch.countDown();
+            this.logLatch.countDown();
         }
 
         @Override
         public void onComplete() {
             LOGGER.debug("successfully retrieved log for container " + containerID);
-            logLatch.countDown();
+            this.logLatch.countDown();
         }
 
         @Override
