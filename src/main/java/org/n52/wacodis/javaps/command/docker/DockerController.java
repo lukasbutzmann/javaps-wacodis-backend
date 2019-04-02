@@ -23,6 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.concurrent.CountDownLatch;
 import org.n52.wacodis.javaps.command.ProcessResult;
+import java.util.ArrayList;
+import java.util.List;
+import org.n52.wacodis.javaps.command.CommandParameter;
 
 /**
  * create connection to docker host, control docker container (create, run,
@@ -56,12 +59,13 @@ public class DockerController {
      * @return
      */
     public CreateContainerResponse createDockerContainer(DockerContainer container, DockerRunCommandConfiguration runConfig) {
+        List<String> cmdParams = getCommandParamsAsStringList(runConfig.getCommandParameters());
+        
         CreateContainerResponse createdContainer = this.dockerClient.createContainerCmd(container.getImageName())
                 .withName(container.getContainerName())
                 .withBinds(runConfig.getVolumeBindings().stream().map(vb -> createBinding(vb)).collect(Collectors.toList()))
                 .withPortBindings(runConfig.getPortBindings().stream().map(pb -> PortBinding.parse(pb)).collect(Collectors.toList()))
-                .withCmd(runConfig.getCommandParameters().stream().map(param -> param.toString()).collect(Collectors.toList()))
-                //.withHostName("localhost")
+                .withCmd(cmdParams)
                 .exec();
 
         return createdContainer;
@@ -243,6 +247,24 @@ public class DockerController {
         }
     }
 
+    private List<String> getCommandParamsAsStringList(List<CommandParameter> params) {
+        List<String> stringParams = new ArrayList<>();
+
+        for (CommandParameter param : params) {
+            String parameter = param.getParameter();
+            String value = param.getValue();
+
+            if (parameter != null && !parameter.trim().isEmpty()) {
+                stringParams.add(parameter.trim());
+            }
+            if (value != null && !value.trim().isEmpty()) {
+                stringParams.add(value.trim());
+            }
+        }
+
+        return stringParams;
+    }
+
     /**
      * only use for EventType 'CONTAINER' and Action 'die' add filters for
      * container id, EventType and Action when registering callback does not
@@ -273,7 +295,7 @@ public class DockerController {
                 } else {
                     LOGGER.warn("exit code for container " + containerID + "unknown, using default value " + exitCode);
                 }
-            }finally{
+            } finally {
                 this.runLatch.countDown();
             }
         }
