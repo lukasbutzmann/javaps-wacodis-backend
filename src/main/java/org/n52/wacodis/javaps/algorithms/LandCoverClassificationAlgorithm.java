@@ -170,9 +170,19 @@ public class LandCoverClassificationAlgorithm {
         }
     }
 
+    /**
+     * returns output filenames, multiple filenames are separated by comma
+     * @return 
+     */
     @LiteralOutput(identifier = "PRODUCT")
     public String getOutput() {
-        return this.products.get(0); //ToDo return List
+        String csvOutputs = getListAsCommaSeparatedString(this.products);
+        return csvOutputs;
     }
 
+    
+     private String getListAsCommaSeparatedString(List<String> strings){
+        return String.join(",", strings);
+     }
+    
 }
