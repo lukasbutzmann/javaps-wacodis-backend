@@ -26,7 +26,6 @@ import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +45,7 @@ public class LandCoverClassificationAlgorithm {
 
     private static final String TIFF_EXTENSION = ".tif";
     private static final String REFERENCEDATA_EPSG = "EPSG:32632";
+    private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
@@ -114,9 +114,10 @@ public class LandCoverClassificationAlgorithm {
     public void execute() throws WacodisProcessingException {
         this.products = new ArrayList();
         String workingDirectory = config.getWorkingDirectory();
+        String namingSuffix = "_" + System.currentTimeMillis(); //common suffix for output files and containers
 
         //TODO preprocess training data for each input image (need to adjust wps input)
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG); //set spatial reference system, TODO: detect srs from input data
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, namingSuffix); //set spatial reference system and output filename suffix, TODO: detect srs from input data
         try {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             File refData = referenceDataFiles.get(0); //.shp
@@ -126,9 +127,10 @@ public class LandCoverClassificationAlgorithm {
             opticalImagesSources.forEach(imageSource -> {
                 File sentinelFile = sentinelDownloader.downloadSentinelFile(
                         imageSource,
-                        workingDirectory);
+                        workingDirectory,
+                        namingSuffix);
 
-                InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false);
+                InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
                 try {
                     // convert sentinel images to GeoTIFF files
                     List<File> outputs = imagePreprocessor.preprocess(
@@ -136,16 +138,18 @@ public class LandCoverClassificationAlgorithm {
                             workingDirectory);
 
                     if (!outputs.isEmpty()) {
-                        String resultId = UUID.randomUUID().toString();
+                        String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
                         LandCoverClassificationExecutor executor
                                 = new LandCoverClassificationExecutor(
                                         workingDirectory,
                                         outputs.get(0).getName(),
                                         trainingData,
-                                        resultId + TIFF_EXTENSION, toolConfig);
+                                        resultFileName,
+                                        this.toolConfig,
+                                        namingSuffix /*container name suffix*/);
                         ProcessResult result = executor.executeTool();
                         if (result.getResultCode() == 0) {
-                            this.products.add(resultId);
+                            this.products.add(resultFileName);
                         }
                         LOGGER.info("Land classification docker process finished "
                                 + "executing with result code: {}", result.getResultCode());

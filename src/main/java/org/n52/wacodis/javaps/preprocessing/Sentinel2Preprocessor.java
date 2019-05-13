@@ -34,6 +34,8 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
 
     private static final String GEOTIFF_TYPE = "GeoTIFF";
 
+    private final String outputFilenamesSuffix;
+
     private boolean useAllBands;
 
     /**
@@ -42,7 +44,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
      *
      */
     public Sentinel2Preprocessor() {
-
+        this.outputFilenamesSuffix = "";
     }
 
     /**
@@ -53,6 +55,11 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
      * resolution
      */
     public Sentinel2Preprocessor(boolean useAllBands) {
+        this(useAllBands, "");
+    }
+
+    public Sentinel2Preprocessor(boolean useAllBands, String outputFilenamesSuffix) {
+        this.outputFilenamesSuffix = outputFilenamesSuffix;
         this.useAllBands = useAllBands;
     }
 
@@ -129,7 +136,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
 
         PrintWriterProgressMonitor monitor = new PrintWriterProgressMonitor(System.out);
 
-        String outFilePath = FilenameUtils.concat(outputDirectoryPath, productName + TIFF_FILE_EXTENSION);
+        String outFilePath = FilenameUtils.concat(outputDirectoryPath, productName + this.outputFilenamesSuffix + TIFF_FILE_EXTENSION);
 
         ProductIO.writeProduct(
                 outProduct,

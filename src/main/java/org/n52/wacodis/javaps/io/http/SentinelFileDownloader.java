@@ -50,9 +50,10 @@ public class SentinelFileDownloader {
      *
      * @param url URL for the Sentinel-2 image.
      * @param outPath Path to the directory to save the image file in
+     * @param outputFilenameSuffix suffix of the created file
      * @return the file that contains the image
      */
-    public File downloadSentinelFile(String url, String outPath) {
+    public File downloadSentinelFile(String url, String outPath, String outputFilenameSuffix) {
 
         // Optional Accept header
         RequestCallback callback = (ClientHttpRequest request) -> {
@@ -61,9 +62,8 @@ public class SentinelFileDownloader {
         };
 
         ResponseExtractor<File> responseExtractor = (ClientHttpResponse response) -> {
-            ;
-            File imageFile = new File(outPath + "/"
-                    + response.getHeaders().getContentDisposition().getFilename());
+            String fileName = response.getHeaders().getContentDisposition().getFilename() + outputFilenameSuffix;
+            File imageFile = new File(outPath + "/" + fileName);
             FileUtils.copyInputStreamToFile(response.getBody(), imageFile);
             return imageFile;
         };
@@ -71,6 +71,10 @@ public class SentinelFileDownloader {
         File imageFile = openAccessHubService.execute(url, HttpMethod.GET, callback, responseExtractor);
 
         return imageFile;
+    }
+    
+    public File downloadSentinelFile(String url, String outPath){
+        return this.downloadSentinelFile(url, outPath, "");
     }
 
 }

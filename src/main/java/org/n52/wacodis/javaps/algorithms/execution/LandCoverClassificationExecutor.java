@@ -24,27 +24,39 @@ public class LandCoverClassificationExecutor {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationExecutor.class);
 
-    private String hostDataHolder;
-    private String input;
-    private String training;
-    private String result;
+    private final String hostDataHolder;
+    private final String input;
+    private final String training;
+    private final String result;
+    private final String containerNameSuffix;
+    private final LandCoverClassificationConfig toolConfig;
 
-    private LandCoverClassificationConfig toolConfig;
-
-    public LandCoverClassificationExecutor(String hostDataHolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig) {
+    public LandCoverClassificationExecutor(String hostDataHolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig, String containerNameSuffix) {
         this.input = input;
         this.training = training;
         this.result = result;
         this.toolConfig = toolConfig;
         this.hostDataHolder = hostDataHolder;
+        this.containerNameSuffix = containerNameSuffix;
+    }
+
+    /**
+     * construct instance without containerNameSuffix
+     * @param hostDataHolder
+     * @param input
+     * @param training
+     * @param result
+     * @param toolConfig 
+     */
+    public LandCoverClassificationExecutor(String hostDataHolder, String input, String training, String result, LandCoverClassificationConfig toolConfig) {
+        this(hostDataHolder, input, training, result, toolConfig, "");
     }
 
     public ProcessResult executeTool() throws InterruptedException {
-        long timestamp = System.currentTimeMillis();
         DockerController controller = initDockerController();
         DockerRunCommandConfiguration runConfig = initRunConfiguration();
-        String containerName = this.toolConfig.getDockerContainerName() + "_" + timestamp;
-        DockerContainer container = new DockerContainer(this.toolConfig.getDockerContainerName(), this.toolConfig.getDockerImage());
+        String containerName = this.toolConfig.getDockerContainerName() + containerNameSuffix;
+        DockerContainer container = new DockerContainer(containerName, this.toolConfig.getDockerImage());
 
         DockerProcess toolProcess = new DockerProcess(controller, container, runConfig);
 
@@ -52,8 +64,6 @@ public class LandCoverClassificationExecutor {
         return pr;
     }
 
-    //@Execute
-    //public void execute(){}
     private DockerRunCommandConfiguration initRunConfiguration() {
         DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 

@@ -50,6 +50,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     private static final String[] SHAPEFILE_EXTENSIONS = new String[]{"shp", "shx", "dbf", "prj", "fix"};
 
     private String epsg;
+    private String outputFilenamesSuffix;
 
     /**
      * @param epsg set srs for resulting shapefile, assumes WGS84 if not set
@@ -58,11 +59,28 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
         this.epsg = epsg;
     }
 
+    public ReferenceDataPreprocessor(String epsg, String outputFilenamesSuffix) {
+        this.epsg = epsg;
+        this.outputFilenamesSuffix = outputFilenamesSuffix;
+    }
+
     public ReferenceDataPreprocessor() {
     }
 
     public String getEpsg() {
         return epsg;
+    }
+
+    public String getOutputFilenamesSuffix() {
+        return outputFilenamesSuffix;
+    }
+
+    /**
+     * set suffix for output file names, random uuid if not set
+     * @param outputFilenamesSuffix 
+     */
+    public void setOutputFilenamesSuffix(String outputFilenamesSuffix) {
+        this.outputFilenamesSuffix = outputFilenamesSuffix;
     }
 
     /**
@@ -262,12 +280,12 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      * @return 
      */
     private File[] generateOutputFileNames(String outputDirectoryPath) {
-        UUID fileIdentifier = UUID.randomUUID();
+        String fileIdentifier = (this.outputFilenamesSuffix != null) ? this.outputFilenamesSuffix : UUID.randomUUID().toString();
         File[] outputFiles = new File[SHAPEFILE_EXTENSIONS.length];
         String fileName;
 
         for (int i = 0; i < outputFiles.length; i++) {
-            fileName = OUTPUT_FILENAME_PREFIX + fileIdentifier.toString() + "." + SHAPEFILE_EXTENSIONS[i];
+            fileName = OUTPUT_FILENAME_PREFIX + fileIdentifier + "." + SHAPEFILE_EXTENSIONS[i];
             outputFiles[i] = getOutputFile(outputDirectoryPath, fileName);
         }
 
