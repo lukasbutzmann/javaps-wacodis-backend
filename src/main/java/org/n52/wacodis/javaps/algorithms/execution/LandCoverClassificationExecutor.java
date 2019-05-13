@@ -40,8 +40,10 @@ public class LandCoverClassificationExecutor {
     }
 
     public ProcessResult executeTool() throws InterruptedException {
+        long timestamp = System.currentTimeMillis();
         DockerController controller = initDockerController();
         DockerRunCommandConfiguration runConfig = initRunConfiguration();
+        String containerName = this.toolConfig.getDockerContainerName() + "_" + timestamp;
         DockerContainer container = new DockerContainer(this.toolConfig.getDockerContainerName(), this.toolConfig.getDockerImage());
 
         DockerProcess toolProcess = new DockerProcess(controller, container, runConfig);
