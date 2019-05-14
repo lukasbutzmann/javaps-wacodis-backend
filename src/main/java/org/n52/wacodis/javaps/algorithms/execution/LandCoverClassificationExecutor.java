@@ -14,44 +14,57 @@ import org.n52.wacodis.javaps.command.docker.DockerProcess;
 import org.n52.wacodis.javaps.command.docker.DockerRunCommandConfiguration;
 import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
+ * executes docker container running landcover classification algorithm
  * @author <a href="mailto:arne.vogt@hs-bochum.de">Arne Vogt</a>
  */
 public class LandCoverClassificationExecutor {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationExecutor.class);
 
-    private final String hostDataHolder;
+    private final String hostDataFolder;
     private final String input;
     private final String training;
     private final String result;
     private final String containerNameSuffix;
     private final LandCoverClassificationConfig toolConfig;
 
-    public LandCoverClassificationExecutor(String hostDataHolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig, String containerNameSuffix) {
+    /**
+     * @param hostDataFolder specifies working directory
+     * @param input relative path from hostDataFolder to input file (imagery), corresponds with -input parameter 
+     * @param training relative path from hostDataFolder to trainig data, corresponds with -training parameter
+     * @param result relative path from hostDataFolder to location where output data should be stored, corresponds with -result parameter
+     * @param toolConfig configure container image, container name and docker host
+     * @param containerNameSuffix individual suffix appended to the container name (toolConfig) to prevent from concurrency issues
+     */
+    public LandCoverClassificationExecutor(String hostDataFolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig, String containerNameSuffix) {
         this.input = input;
         this.training = training;
         this.result = result;
         this.toolConfig = toolConfig;
-        this.hostDataHolder = hostDataHolder;
+        this.hostDataFolder = hostDataFolder;
         this.containerNameSuffix = containerNameSuffix;
     }
 
     /**
      * construct instance without containerNameSuffix
-     * @param hostDataHolder
-     * @param input
-     * @param training
-     * @param result
-     * @param toolConfig 
+     * @param hostDataFolder specifies working directory
+     * @param input relative path from hostDataFolder to input file (imagery), corresponds with -input parameter
+     * @param training relative path from hostDataFolder to trainig data, corresponds with -training parameter
+     * @param result relative path from hostDataFolder to location where output data should be stored, corresponds with -result parameter
+     * @param toolConfig individual suffix appended to the container name (toolConfig) to prevent from concurrency issues
      */
-    public LandCoverClassificationExecutor(String hostDataHolder, String input, String training, String result, LandCoverClassificationConfig toolConfig) {
-        this(hostDataHolder, input, training, result, toolConfig, "");
+    public LandCoverClassificationExecutor(String hostDataFolder, String input, String training, String result, LandCoverClassificationConfig toolConfig) {
+        this(hostDataFolder, input, training, result, toolConfig, "");
     }
 
+    /**
+     * executes Landcover Classification Tool synchronously
+     * @return container output (status code, container log) 
+     * (output file is specified by result parameter of the constructor)
+     * @throws InterruptedException 
+     */
     public ProcessResult executeTool() throws InterruptedException {
         DockerController controller = initDockerController();
         DockerRunCommandConfiguration runConfig = initRunConfiguration();
@@ -67,15 +80,15 @@ public class LandCoverClassificationExecutor {
     private DockerRunCommandConfiguration initRunConfiguration() {
         DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 
-        //cmd 
+        //set cmd parameters
         runConfig.addCommandParameter(new CommandParameter("", "/bin/ash"));
         runConfig.addCommandParameter(new CommandParameter("", "/eo.sh"));
         runConfig.addCommandParameter(new CommandParameter("-input", this.input));
         runConfig.addCommandParameter(new CommandParameter("-result", this.result));
         runConfig.addCommandParameter(new CommandParameter("-training", this.training));
 
-        //volumes
-        runConfig.addVolumeBinding(concatVolumeBinding(this.hostDataHolder, "/public"));
+        //set volumes bindings
+        runConfig.addVolumeBinding(concatVolumeBinding(this.hostDataFolder, "/public"));
 
         return runConfig;
     }
