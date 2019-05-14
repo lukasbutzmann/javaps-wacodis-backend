@@ -26,6 +26,7 @@ import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,10 +149,12 @@ public class LandCoverClassificationAlgorithm {
                                         this.toolConfig,
                                         namingSuffix /*container name suffix*/);
                         ProcessResult result = executor.executeTool();
-                        if (result.getResultCode() == 0) {
+                        if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
                             this.products.add(resultFileName);
+                        }else{ //non-zero Result Code, error occured during tool execution
+                            throw new WacodisProcessingException("landcover classification tool exited with a non-zero result code, result code was " + result.getResultCode() + ", consult tool specific documentation for details");
                         }
-                        LOGGER.info("Land classification docker process finished "
+                        LOGGER.info("landcover classification docker process finished "
                                 + "executing with result code: {}", result.getResultCode());
                         LOGGER.debug(result.getOutputMessage());
                     }
@@ -163,6 +166,8 @@ public class LandCoverClassificationAlgorithm {
                 } catch (InterruptedException ex) {
                     LOGGER.error(ex.getMessage());
                     LOGGER.debug("Error while executing land cover docker process", ex);
+                } catch (WacodisProcessingException ex) {
+                    Exceptions.printStackTrace(ex);
                 }
 
             });
