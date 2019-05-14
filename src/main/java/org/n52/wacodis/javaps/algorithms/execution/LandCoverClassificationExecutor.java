@@ -27,36 +27,36 @@ public class LandCoverClassificationExecutor {
     private final String input;
     private final String training;
     private final String result;
-    private final String containerNameSuffix;
-    private final LandCoverClassificationConfig toolConfig;
+    private final String containerName;
+    private final LandCoverClassificationConfig toolConfig;  
 
     /**
      * @param hostDataFolder specifies working directory
      * @param input relative path from hostDataFolder to input file (imagery), corresponds with -input parameter 
      * @param training relative path from hostDataFolder to trainig data, corresponds with -training parameter
      * @param result relative path from hostDataFolder to location where output data should be stored, corresponds with -result parameter
-     * @param toolConfig configure container image, container name and docker host
-     * @param containerNameSuffix individual suffix appended to the container name (toolConfig) to prevent from concurrency issues
+     * @param toolConfig configure container image and docker host (container name is overridden by containerName) 
+     * @param containerName overrides toolConfig.dockerContainerName
      */
-    public LandCoverClassificationExecutor(String hostDataFolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig, String containerNameSuffix) {
+    public LandCoverClassificationExecutor(String hostDataFolder, String input, String training, String result,  LandCoverClassificationConfig toolConfig, String containerName) {
         this.input = input;
         this.training = training;
         this.result = result;
         this.toolConfig = toolConfig;
         this.hostDataFolder = hostDataFolder;
-        this.containerNameSuffix = containerNameSuffix;
+        this.containerName = containerName;
     }
 
     /**
-     * construct instance without containerNameSuffix
+     * construct instance with container name specified in toolConfig
      * @param hostDataFolder specifies working directory
      * @param input relative path from hostDataFolder to input file (imagery), corresponds with -input parameter
      * @param training relative path from hostDataFolder to trainig data, corresponds with -training parameter
      * @param result relative path from hostDataFolder to location where output data should be stored, corresponds with -result parameter
-     * @param toolConfig individual suffix appended to the container name (toolConfig) to prevent from concurrency issues
+     * @param toolConfig configure container image container name and docker host
      */
     public LandCoverClassificationExecutor(String hostDataFolder, String input, String training, String result, LandCoverClassificationConfig toolConfig) {
-        this(hostDataFolder, input, training, result, toolConfig, "");
+        this(hostDataFolder, input, training, result, toolConfig, toolConfig.getDockerContainerName());
     }
 
     /**
@@ -68,8 +68,7 @@ public class LandCoverClassificationExecutor {
     public ProcessResult executeTool() throws InterruptedException {
         DockerController controller = initDockerController();
         DockerRunCommandConfiguration runConfig = initRunConfiguration();
-        String containerName = this.toolConfig.getDockerContainerName() + containerNameSuffix;
-        DockerContainer container = new DockerContainer(containerName, this.toolConfig.getDockerImage());
+        DockerContainer container = new DockerContainer(this.containerName, this.toolConfig.getDockerImage());
 
         DockerProcess toolProcess = new DockerProcess(controller, container, runConfig);
 

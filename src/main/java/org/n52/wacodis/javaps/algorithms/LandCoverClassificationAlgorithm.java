@@ -140,6 +140,8 @@ public class LandCoverClassificationAlgorithm {
 
                     if (!outputs.isEmpty()) {
                         String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
+                        String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
+                        
                         LandCoverClassificationExecutor executor
                                 = new LandCoverClassificationExecutor(
                                         workingDirectory,
@@ -147,12 +149,12 @@ public class LandCoverClassificationAlgorithm {
                                         trainingData,
                                         resultFileName,
                                         this.toolConfig,
-                                        namingSuffix /*container name suffix*/);
+                                        containerName /*docker container name*/);
                         ProcessResult result = executor.executeTool();
                         if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
                             this.products.add(resultFileName);
                         }else{ //non-zero Result Code, error occured during tool execution
-                            throw new WacodisProcessingException("landcover classification tool exited with a non-zero result code, result code was " + result.getResultCode() + ", consult tool specific documentation for details");
+                            throw new WacodisProcessingException("landcover classification tool (container: "+ containerName +" )exited with a non-zero result code, result code was " + result.getResultCode() + ", consult tool specific documentation for details");
                         }
                         LOGGER.info("landcover classification docker process finished "
                                 + "executing with result code: {}", result.getResultCode());
