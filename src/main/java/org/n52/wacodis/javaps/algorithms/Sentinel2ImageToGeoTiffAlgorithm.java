@@ -8,17 +8,27 @@ package org.n52.wacodis.javaps.algorithms;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
 import org.n52.javaps.algorithm.annotation.Algorithm;
 import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
+import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
+import org.n52.wacodis.javaps.io.metadata.TimeFrame;
+import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
+import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
 import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -37,6 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired;
         statusSupported = true)
 public class Sentinel2ImageToGeoTiffAlgorithm {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(Sentinel2ImageToGeoTiffAlgorithm.class);
+
     @Autowired
     private WacodisBackendConfig config;
 
@@ -45,6 +57,7 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
     private String imageUrl;
     private GenericFileData product;
+    private ProductMetadata metadata;
 
     @LiteralInput(
             identifier = "SENTINEL-2_URL",
@@ -60,20 +73,19 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
     @Execute
     public void execute() {
         try {
-
             File sentinelFile = fileDownloader.downloadSentinelFile(imageUrl);
+            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());;
+            this.product = createProductOutput(sentinelProduct);
 
-            String targetDirectory = config.getWorkingDirectory();
-
-            InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
-            List<File> outputs = preprocessor.preprocess(sentinelFile.getPath(), targetDirectory);
-            
-            this.product = new GenericFileData(outputs.get(0), "image/geotiff");
-
+            ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
+            this.metadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
+        } catch (WacodisProcessingException ex) {
+            LOGGER.error(ex.getMessage());
+            LOGGER.debug("Error while creating output", ex);
         } catch (IOException ex) {
-            Exceptions.printStackTrace(ex);
+            LOGGER.error(ex.getMessage());
+            LOGGER.debug("Error while reading sentinel data", ex);
         }
-
     }
 
     @ComplexOutput(
@@ -82,6 +94,37 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
     )
     public GenericFileData getOutput() {
         return this.product;
+    }
+
+    @ComplexOutput(
+            identifier = "METADATA",
+            binding = ProductMetadataBinding.class
+    )
+    public ProductMetadata getMetadata() {
+        return this.metadata;
+    }
+
+    private GenericFileData createProductOutput(Product sentinelProduct) throws WacodisProcessingException {
+        String targetDirectory = config.getWorkingDirectory();
+        InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
+
+        List<File> outputs = preprocessor.preprocess(sentinelProduct, targetDirectory);
+
+        try {
+            return new GenericFileData(outputs.get(0), "image/geotiff");
+        } catch (IOException ex) {
+            throw new WacodisProcessingException("Error while creating generic file data.", ex);
+        }
+    }
+
+    private ProductMetadata createMetadataOutput() {
+        ProductMetadata metadata = new ProductMetadata();
+        TimeFrame timeFrame = new TimeFrame();
+        timeFrame.setStartDate("2019-01-01'T'12:00:00.000Z");
+        timeFrame.setEndDate("2019-01-02'T'12:00:00.000Z");
+        metadata.setTimeFrame(timeFrame);
+
+        return metadata;
     }
 
 }

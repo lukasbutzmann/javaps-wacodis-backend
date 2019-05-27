@@ -26,7 +26,6 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Polygon;
-import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.UUID;
 import org.geotools.data.DataStore;
@@ -38,7 +37,6 @@ import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.referencing.FactoryException;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -105,7 +103,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      * resulting files
      * @return array of File comprising all parts of a shapefile, order: [shp,
      * shx, dbf, prj, fix], filenames are randomized
-     * @throws IOException
+     * @throws WacodisProcessingException
      */
     @Override
     public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
