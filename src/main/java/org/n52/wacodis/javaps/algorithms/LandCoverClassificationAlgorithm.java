@@ -10,23 +10,31 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.n52.javaps.algorithm.annotation.Algorithm;
 import org.n52.javaps.algorithm.annotation.ComplexInput;
+import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
-import org.n52.javaps.algorithm.annotation.LiteralOutput;
+import org.n52.javaps.io.GenericFileData;
+import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.LandCoverClassificationExecutor;
 import org.n52.wacodis.javaps.command.ProcessResult;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
+import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
+//import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
+import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +72,7 @@ public class LandCoverClassificationAlgorithm {
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
     private List<String> products;
+    private List<ProductMetadata> metadataList;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -114,11 +123,14 @@ public class LandCoverClassificationAlgorithm {
     @Execute
     public void execute() throws WacodisProcessingException {
         this.products = new ArrayList();
+        this.metadataList = new ArrayList();
+
         String workingDirectory = config.getWorkingDirectory();
         String namingSuffix = "_" + System.currentTimeMillis(); //common suffix for output files and containers
 
         //TODO preprocess training data for each input image (need to adjust wps input)
         InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, namingSuffix); //set spatial reference system and output filename suffix, TODO: detect srs from input data
+        ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
         try {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             File refData = referenceDataFiles.get(0); //.shp
@@ -133,15 +145,17 @@ public class LandCoverClassificationAlgorithm {
 
                 InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
                 try {
+                    Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                    this.metadataList.add(metadataCreator.createProductMetadataBinding(sentinelProduct));
                     // convert sentinel images to GeoTIFF files
                     List<File> outputs = imagePreprocessor.preprocess(
-                            sentinelFile.getPath(),
+                            sentinelProduct,
                             workingDirectory);
 
                     if (!outputs.isEmpty()) {
                         String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
                         String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
-                        
+
                         LandCoverClassificationExecutor executor
                                 = new LandCoverClassificationExecutor(
                                         workingDirectory,
@@ -153,47 +167,60 @@ public class LandCoverClassificationAlgorithm {
                         ProcessResult result = executor.executeTool();
                         if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
                             this.products.add(resultFileName);
-                        }else{ //non-zero Result Code, error occured during tool execution
-                            throw new WacodisProcessingException("landcover classification tool (container: "+ containerName +" )exited with a non-zero result code, result code was " + result.getResultCode() + ", consult tool specific documentation for details");
+                        } else { //non-zero Result Code, error occured during tool execution
+                            throw new WacodisProcessingException("landcover classification tool (container: "
+                                    + containerName
+                                    + " )exited with a non-zero result code, result code was "
+                                    + result.getResultCode()
+                                    + ", consult tool specific documentation for details");
                         }
                         LOGGER.info("landcover classification docker process finished "
                                 + "executing with result code: {}", result.getResultCode());
                         LOGGER.debug(result.getOutputMessage());
                     }
 
-                } catch (IOException ex) {
+                } catch (WacodisProcessingException ex) {
                     LOGGER.error(ex.getMessage());
                     LOGGER.debug("Error while processing sentinel file: "
                             + sentinelFile.getName(), ex);
                 } catch (InterruptedException ex) {
                     LOGGER.error(ex.getMessage());
                     LOGGER.debug("Error while executing land cover docker process", ex);
-                } catch (WacodisProcessingException ex) {
-                    Exceptions.printStackTrace(ex);
+                } catch (IOException ex) {
+                    LOGGER.error(ex.getMessage());
+                    LOGGER.debug("Error while reading setinel data input", ex);
                 }
-
             });
-            
-        } catch (IOException ex) {
+
+        } catch (WacodisProcessingException ex) {
             String message = "Error while preprocessing reference data";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
     }
 
-    /**
-     * returns output filenames, multiple filenames are separated by comma
-     * @return 
-     */
-    @LiteralOutput(identifier = "PRODUCT")
-    public String getOutput() {
-        String csvOutputs = getListAsCommaSeparatedString(this.products);
-        return csvOutputs;
+    @ComplexOutput(
+            identifier = "PRODUCT",
+            binding = GenericFileDataBinding.class
+    )
+    public GenericFileData getOutput() throws WacodisProcessingException {
+        return this.createProductOutput(this.products.get(0));
     }
 
-    
-     private String getListAsCommaSeparatedString(List<String> strings){
-        return String.join(",", strings);
-     }
-    
+    @ComplexOutput(
+            identifier = "METADATA",
+            binding = ProductMetadataBinding.class
+    )
+    public ProductMetadata getMetadata() {
+        return this.metadataList.get(0);
+    }
+
+    private GenericFileData createProductOutput(String filePath) throws WacodisProcessingException {
+        try {
+            return new GenericFileData(new File(filePath), "image/geotiff");
+        } catch (IOException ex) {
+            throw new WacodisProcessingException("Error while creating generic file data.", ex);
+        }
+    }
+
 }
