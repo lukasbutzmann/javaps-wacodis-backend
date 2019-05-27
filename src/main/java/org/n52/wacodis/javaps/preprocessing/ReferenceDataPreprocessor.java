@@ -26,16 +26,19 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Polygon;
+import java.net.MalformedURLException;
 import java.util.Arrays;
 import java.util.UUID;
 import org.geotools.data.DataStore;
 import org.geotools.data.FileDataStoreFactorySpi;
 import org.geotools.data.FileDataStoreFinder;
+import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.referencing.FactoryException;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -77,7 +80,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     /**
      * set suffix for output file names, random uuid if not set
-     * @param outputFilenamesSuffix 
+     *
+     * @param outputFilenamesSuffix
      */
     public void setOutputFilenamesSuffix(String outputFilenamesSuffix) {
         this.outputFilenamesSuffix = outputFilenamesSuffix;
@@ -85,7 +89,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     /**
      * set srs for resulting shapefile, assumes WGS84 if not set
-     * @param epsg 
+     *
+     * @param epsg
      */
     public void setEpsg(String epsg) {
         this.epsg = epsg;
@@ -93,51 +98,58 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     /**
      * writes a SimpleFeatureCollection to a Shapefile,
-     * @param inputCollection features must have a attribute 'class' of type Long or Integer
-     * @param outputDirectoryPath specifies the directory in which to store the resulting files
-     * @return array of File comprising all parts of a shapefile, order: [shp, shx, dbf, prj, fix], filenames are randomized
+     *
+     * @param inputCollection features must have a attribute 'class' of type
+     * Long or Integer
+     * @param outputDirectoryPath specifies the directory in which to store the
+     * resulting files
+     * @return array of File comprising all parts of a shapefile, order: [shp,
+     * shx, dbf, prj, fix], filenames are randomized
      * @throws IOException
      */
     @Override
-    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws IOException {
-        File[] outputFiles = generateOutputFileNames(outputDirectoryPath);
-        File referenceDataShapefile = outputFiles[0]; //.shp
-        URL fileURL = referenceDataShapefile.toURI().toURL();
+    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
+        try {
+            File[] outputFiles = generateOutputFileNames(outputDirectoryPath);
+            File referenceDataShapefile = outputFiles[0]; //.shp
+            URL fileURL = referenceDataShapefile.toURI().toURL();
 
-        //get datastore factory for shapefiles
-        FileDataStoreFactorySpi dataStoreFactory = FileDataStoreFinder.getDataStoreFactory(SHAPEFILE_EXTENSIONS[0]); //.shp
+            //get datastore factory for shapefiles
+            FileDataStoreFactorySpi dataStoreFactory = FileDataStoreFinder.getDataStoreFactory(SHAPEFILE_EXTENSIONS[0]); //.shp
 
-        //params for creating shapefile
-        Map<String, Serializable> params = new HashMap<>();
-        params.put("url", fileURL); //filename
-        params.put("create spatial index", Boolean.TRUE);
+            //params for creating shapefile
+            Map<String, Serializable> params = new HashMap<>();
+            params.put("url", fileURL); //filename
+            params.put("create spatial index", Boolean.TRUE);
 
-        //check if params are suitable for creating shapefile
-        boolean canProcess = dataStoreFactory.canProcess(params);
-        if (!canProcess) {
-            String msg = "cannot create datastore, params insufficient for datastore factory of class " + dataStoreFactory.getClass().getSimpleName();
-            LOGGER.debug(msg + ", params: " + System.lineSeparator() + params.toString());
-            throw new IOException(msg);
+            //check if params are suitable for creating shapefile
+            boolean canProcess = dataStoreFactory.canProcess(params);
+            if (!canProcess) {
+                String msg = "cannot create datastore, params insufficient for datastore factory of class " + dataStoreFactory.getClass().getSimpleName();
+                LOGGER.debug(msg + ", params: " + System.lineSeparator() + params.toString());
+                throw new WacodisProcessingException(msg);
+            }
+
+            boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
+            if (!isInputSchemaValid) {
+                String msg = "cannot write features, input schema is invalid";
+                LOGGER.debug(msg);
+                throw new WacodisProcessingException(msg);
+            }
+
+            //create new shapefile datastore with schema for trainig data
+            DataStore dataStore = dataStoreFactory.createNewDataStore(params);
+            CoordinateReferenceSystem crs = determineCRS();
+            Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
+            SimpleFeatureType outputSchema = createReferenceDataFeatureType(crs, geometryBinding); //traning data schema
+            dataStore.createSchema(outputSchema);
+
+            writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
+
+            return Arrays.asList(outputFiles);
+        } catch (IOException ex) {
+            throw new WacodisProcessingException("Error while creating shape file.", ex);
         }
-        
-        boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
-        if(!isInputSchemaValid){
-            String msg = "cannot write features, input schema is invalid";
-            LOGGER.debug(msg);
-            throw new IOException(msg);
-        }
-
-
-        //create new shapefile datastore with schema for trainig data
-        DataStore dataStore = dataStoreFactory.createNewDataStore(params);
-        CoordinateReferenceSystem crs = determineCRS();
-        Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
-        SimpleFeatureType outputSchema = createReferenceDataFeatureType(crs, geometryBinding); //traning data schema
-        dataStore.createSchema(outputSchema);
-
-        writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
-
-        return Arrays.asList(outputFiles);
     }
 
     private void writeFeaturesToDataStore(DataStore dataStore, SimpleFeatureCollection inputCollection, File referenceDataFile) throws IOException {
@@ -172,20 +184,21 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     /**
      * schema must include attribute 'class' of type Integer or Long
+     *
      * @param inputSchema
-     * @return 
+     * @return
      */
     private boolean validateInputSchema(SimpleFeatureType inputSchema) {
-        AttributeDescriptor classAttribute =  inputSchema.getDescriptor(LANDCOVERCLASS_ATTRIBUTE);
-        
-        if(classAttribute == null ){ //check if class attribute exits
+        AttributeDescriptor classAttribute = inputSchema.getDescriptor(LANDCOVERCLASS_ATTRIBUTE);
+
+        if (classAttribute == null) { //check if class attribute exits
             LOGGER.warn("input schema does not contain mandatory attribute " + LANDCOVERCLASS_ATTRIBUTE);
             return false;
-        }else{ //check datatype of class attribute
+        } else { //check datatype of class attribute
             AttributeType type = inputSchema.getType(LANDCOVERCLASS_ATTRIBUTE);
             Class binding = type.getBinding();
-            
-            if(!binding.equals(Integer.class) && !binding.equals(Long.class)){
+
+            if (!binding.equals(Integer.class) && !binding.equals(Long.class)) {
                 LOGGER.warn("attribute " + LANDCOVERCLASS_ATTRIBUTE + " is of type " + binding.getSimpleName() + ", expected Integer or Long");
                 return false;
             }
@@ -193,46 +206,45 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
         return true;
     }
-    
-    private Class getGeometryTypeFromSchema(SimpleFeatureType schema){
+
+    private Class getGeometryTypeFromSchema(SimpleFeatureType schema) {
         GeometryDescriptor geomAttribute = schema.getGeometryDescriptor();
         GeometryType geomType = geomAttribute.getType();
         Class geomBinding = geomType.getBinding();
-        
+
         LOGGER.debug("get geometry attribute " + geomAttribute.getLocalName() + " of type " + geomBinding.getSimpleName());
-        
-        if(!geomBinding.equals(Polygon.class) && !geomBinding.equals(MultiPolygon.class)){
-            LOGGER.warn("geometry attribute " + geomAttribute.getLocalName() + " is of datatype " + geomBinding.getSimpleName() +" , expected Polygon or MultiPolygon");
+
+        if (!geomBinding.equals(Polygon.class) && !geomBinding.equals(MultiPolygon.class)) {
+            LOGGER.warn("geometry attribute " + geomAttribute.getLocalName() + " is of datatype " + geomBinding.getSimpleName() + " , expected Polygon or MultiPolygon");
         }
-        
+
         return geomBinding;
     }
-    
 
-    
     /**
      * get schema for landclassification training data
-     * @return 
+     *
+     * @return
      */
     public SimpleFeatureType retrieveDefaultSchema() {
         CoordinateReferenceSystem crs = determineCRS();
         return createReferenceDataFeatureType(crs, null); //MultiPolygon
     }
-    
 
     /**
      * schema for landcover classification training data
      *
      * @param crs
-     * @param geometryBinding binding for geometry attribute, assume MultiPolygon if null
+     * @param geometryBinding binding for geometry attribute, assume
+     * MultiPolygon if null
      * @return
      */
-    private SimpleFeatureType createReferenceDataFeatureType(CoordinateReferenceSystem crs, Class geometryBinding){
-        if(geometryBinding == null){
+    private SimpleFeatureType createReferenceDataFeatureType(CoordinateReferenceSystem crs, Class geometryBinding) {
+        if (geometryBinding == null) {
             geometryBinding = MultiPolygon.class;
             LOGGER.warn("geometry binding not set, assume MultiPolygon");
         }
-        
+
         SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
         builder.setName("referencedata");
         builder.setCRS(crs);
@@ -243,10 +255,10 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
         return builder.buildFeatureType();
     }
-    
 
     /**
-     * @return CoordinateReferenceSystem for this.epsg or WGS84 if this.epsg is not set or unparsable
+     * @return CoordinateReferenceSystem for this.epsg or WGS84 if this.epsg is
+     * not set or unparsable
      */
     private CoordinateReferenceSystem determineCRS() {
         CoordinateReferenceSystem crs;
@@ -275,9 +287,11 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     }
 
     /**
-     * generate randomized file identifiers for output files (parts of the shapefile)
+     * generate randomized file identifiers for output files (parts of the
+     * shapefile)
+     *
      * @param outputDirectoryPath
-     * @return 
+     * @return
      */
     private File[] generateOutputFileNames(String outputDirectoryPath) {
         String fileIdentifier = (this.outputFilenamesSuffix != null) ? this.outputFilenamesSuffix : UUID.randomUUID().toString();

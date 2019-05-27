@@ -8,7 +8,9 @@ package org.n52.wacodis.javaps.preprocessing;
 import com.bc.ceres.core.PrintWriterProgressMonitor;
 import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,6 +22,8 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
+import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.openide.util.Exceptions;
 
 /**
  * Preprocessor for converting a Sentinel-2 image scene from SAFE format to
@@ -28,7 +32,7 @@ import org.esa.snap.core.util.ProductUtils;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
+public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
 
     private static final String TIFF_FILE_EXTENSION = ".tif";
 
@@ -37,6 +41,10 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
     private final String outputFilenamesSuffix;
 
     private boolean useAllBands;
+
+    private static final String[] SUPPORTED_PRODUCT_TYPES = new String[]{
+        "S2_MSI_Level-1C", "S2_MSI_Level-2A"
+    };
 
     /**
      * Constructs a new default Sentinel-2 preprocessor that only considers the
@@ -64,20 +72,26 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
     }
 
     @Override
-    public List<File> preprocess(String inputFilePath, String outputDirectoryPath) throws IOException {
-        Product inProduct = ProductIO.readProduct(inputFilePath);
+    public List<File> preprocess(Product product, String outputDirectoryPath) throws WacodisProcessingException {
+//        Product inProduct = ProductIO.readProduct(inputFilePath);
+        if (!isProductTypeSupported(product.getProductType())) {
+            throw new WacodisProcessingException("Product type is not supported.");
 
-        Band[] bands = inProduct.getBands();
-
-        String productName = FilenameUtils
-                .removeExtension(FilenameUtils.getName(inputFilePath));
+        };
+        Band[] bands = product.getBands();
+        String productName = product.getName();
 
         Map<Integer, Set<Band>> bandMap = groupSpectralRasterBands(bands);
+        try {
+            if (useAllBands) {
 
-        if (useAllBands) {
-            return createGeotiffForAllBandResolutions(bandMap, inProduct, productName, outputDirectoryPath);
-        } else {
-            return createGeotiffForHighestBandResolution(bandMap, inProduct, productName, outputDirectoryPath);
+                return createGeotiffForAllBandResolutions(bandMap, product, productName, outputDirectoryPath);
+
+            } else {
+                return createGeotiffForHighestBandResolution(bandMap, product, productName, outputDirectoryPath);
+            }
+        } catch (IOException ex) {
+            throw new WacodisProcessingException("Error while creating GeoTiff", ex);
         }
     }
 
@@ -145,6 +159,11 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<String> {
                 monitor
         );
         return new File(outFilePath);
+    }
+
+    private boolean isProductTypeSupported(String productType) {
+        return Arrays.stream(SUPPORTED_PRODUCT_TYPES)
+                .anyMatch(t -> t.equals(productType));
     }
 
 }
