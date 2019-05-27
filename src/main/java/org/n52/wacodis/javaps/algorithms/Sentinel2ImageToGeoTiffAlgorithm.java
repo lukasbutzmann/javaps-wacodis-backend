@@ -5,30 +5,20 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
-import com.bc.ceres.core.PrintWriterProgressMonitor;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
-import javax.imageio.ImageIO;
-import org.apache.commons.io.FilenameUtils;
-import org.esa.s2tbx.s2msi.resampler.S2Resampler;
-import org.esa.snap.core.dataio.ProductIO;
-import org.esa.snap.core.datamodel.Band;
-import org.esa.snap.core.datamodel.Product;
-import org.esa.snap.core.util.ProductUtils;
-import org.esa.snap.runtime.Engine;
 import org.n52.javaps.algorithm.annotation.Algorithm;
+import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
-import org.n52.javaps.algorithm.annotation.LiteralOutput;
+import org.n52.javaps.io.GenericFileData;
+import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
 import org.openide.util.Exceptions;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -51,13 +41,10 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
     private WacodisBackendConfig config;
 
     @Autowired
-    private Sentinel2Preprocessor sentinel2Preprocessor;
-
-    @Autowired
     private SentinelFileDownloader fileDownloader;
 
     private String imageUrl;
-    private String product;
+    private GenericFileData product;
 
     @LiteralInput(
             identifier = "SENTINEL-2_URL",
@@ -80,16 +67,20 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
             InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
             List<File> outputs = preprocessor.preprocess(sentinelFile.getPath(), targetDirectory);
+            
+            this.product = new GenericFileData(outputs.get(0), "image/geotiff");
 
-            this.product = outputs.get(0).getName();
         } catch (IOException ex) {
             Exceptions.printStackTrace(ex);
         }
 
     }
 
-    @LiteralOutput(identifier = "PRODUCT")
-    public String getOutput() {
+    @ComplexOutput(
+            identifier = "PRODUCT",
+            binding = GenericFileDataBinding.class
+    )
+    public GenericFileData getOutput() {
         return this.product;
     }
 
