@@ -116,15 +116,4 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
             throw new WacodisProcessingException("Error while creating generic file data.", ex);
         }
     }
-
-    private ProductMetadata createMetadataOutput() {
-        ProductMetadata metadata = new ProductMetadata();
-        TimeFrame timeFrame = new TimeFrame();
-        timeFrame.setStartDate("2019-01-01'T'12:00:00.000Z");
-        timeFrame.setEndDate("2019-01-02'T'12:00:00.000Z");
-        metadata.setTimeFrame(timeFrame);
-
-        return metadata;
-    }
-
 }
