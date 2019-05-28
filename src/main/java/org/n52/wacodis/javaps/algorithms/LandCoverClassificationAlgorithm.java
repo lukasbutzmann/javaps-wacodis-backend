@@ -68,11 +68,11 @@ public class LandCoverClassificationAlgorithm {
     private LandCoverClassificationConfig toolConfig;
 
     private String opticalImagesSourceType;
-    private List<String> opticalImagesSources;
+    private String opticalImagesSource;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
-    private List<String> products;
-    private List<ProductMetadata> metadataList;
+    private String product;
+    private ProductMetadata productMetadata;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -91,9 +91,9 @@ public class LandCoverClassificationAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 10)
-    public void setOpticalImagesSources(List<String> value) {
-        this.opticalImagesSources = value;
+            maxOccurs = 1)
+    public void setOpticalImagesSources(String value) {
+        this.opticalImagesSource = value;
     }
 
     @LiteralInput(
@@ -120,10 +120,24 @@ public class LandCoverClassificationAlgorithm {
         this.referenceData = value;
     }
 
+    @ComplexOutput(
+            identifier = "PRODUCT",
+            binding = GenericFileDataBinding.class
+    )
+    public GenericFileData getOutput() throws WacodisProcessingException {
+        return this.createProductOutput(this.product);
+    }
+
+    @ComplexOutput(
+            identifier = "METADATA",
+            binding = ProductMetadataBinding.class
+    )
+    public ProductMetadata getMetadata() {
+        return this.productMetadata;
+    }
+
     @Execute
     public void execute() throws WacodisProcessingException {
-        this.products = new ArrayList();
-        this.metadataList = new ArrayList();
 
         String workingDirectory = config.getWorkingDirectory();
         String namingSuffix = "_" + System.currentTimeMillis(); //common suffix for output files and containers
@@ -137,82 +151,64 @@ public class LandCoverClassificationAlgorithm {
             String trainingData = refData.getName();
 
             // Download satellite data
-            opticalImagesSources.forEach(imageSource -> {
-                File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                        imageSource,
-                        workingDirectory,
-                        namingSuffix);
+            File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                    opticalImagesSource,
+                    workingDirectory,
+                    namingSuffix);
 
-                InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
-                try {
-                    Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-                    this.metadataList.add(metadataCreator.createProductMetadataBinding(sentinelProduct));
-                    // convert sentinel images to GeoTIFF files
-                    List<File> outputs = imagePreprocessor.preprocess(
-                            sentinelProduct,
-                            workingDirectory);
+            InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
+            try {
+                Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                this.productMetadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
+                // convert sentinel images to GeoTIFF files
+                List<File> outputs = imagePreprocessor.preprocess(
+                        sentinelProduct,
+                        workingDirectory);
 
-                    if (!outputs.isEmpty()) {
-                        String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
-                        String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
+                if (!outputs.isEmpty()) {
+                    String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
+                    String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
 
-                        LandCoverClassificationExecutor executor
-                                = new LandCoverClassificationExecutor(
-                                        workingDirectory,
-                                        outputs.get(0).getName(),
-                                        trainingData,
-                                        resultFileName,
-                                        this.toolConfig,
-                                        containerName /*docker container name*/);
-                        ProcessResult result = executor.executeTool();
-                        if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
-                            this.products.add(resultFileName);
-                        } else { //non-zero Result Code, error occured during tool execution
-                            throw new WacodisProcessingException("landcover classification tool (container: "
-                                    + containerName
-                                    + " )exited with a non-zero result code, result code was "
-                                    + result.getResultCode()
-                                    + ", consult tool specific documentation for details");
-                        }
-                        LOGGER.info("landcover classification docker process finished "
-                                + "executing with result code: {}", result.getResultCode());
-                        LOGGER.debug(result.getOutputMessage());
+                    LandCoverClassificationExecutor executor
+                            = new LandCoverClassificationExecutor(
+                                    workingDirectory,
+                                    outputs.get(0).getName(),
+                                    trainingData,
+                                    resultFileName,
+                                    this.toolConfig,
+                                    containerName /*docker container name*/);
+                    ProcessResult result = executor.executeTool();
+                    if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
+                        this.product = resultFileName;
+                    } else { //non-zero Result Code, error occured during tool execution
+                        throw new WacodisProcessingException("landcover classification tool (container: "
+                                + containerName
+                                + " )exited with a non-zero result code, result code was "
+                                + result.getResultCode()
+                                + ", consult tool specific documentation for details");
                     }
-
-                } catch (WacodisProcessingException ex) {
-                    LOGGER.error(ex.getMessage());
-                    LOGGER.debug("Error while processing sentinel file: "
-                            + sentinelFile.getName(), ex);
-                } catch (InterruptedException ex) {
-                    LOGGER.error(ex.getMessage());
-                    LOGGER.debug("Error while executing land cover docker process", ex);
-                } catch (IOException ex) {
-                    LOGGER.error(ex.getMessage());
-                    LOGGER.debug("Error while reading setinel data input", ex);
+                    LOGGER.info("landcover classification docker process finished "
+                            + "executing with result code: {}", result.getResultCode());
+                    LOGGER.debug(result.getOutputMessage());
                 }
-            });
+
+            } catch (WacodisProcessingException ex) {
+                LOGGER.error(ex.getMessage());
+                LOGGER.debug("Error while processing sentinel file: "
+                        + sentinelFile.getName(), ex);
+            } catch (InterruptedException ex) {
+                LOGGER.error(ex.getMessage());
+                LOGGER.debug("Error while executing land cover docker process", ex);
+            } catch (IOException ex) {
+                LOGGER.error(ex.getMessage());
+                LOGGER.debug("Error while reading setinel data input", ex);
+            }
 
         } catch (WacodisProcessingException ex) {
             String message = "Error while preprocessing reference data";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
-    }
-
-    @ComplexOutput(
-            identifier = "PRODUCT",
-            binding = GenericFileDataBinding.class
-    )
-    public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.products.get(0));
-    }
-
-    @ComplexOutput(
-            identifier = "METADATA",
-            binding = ProductMetadataBinding.class
-    )
-    public ProductMetadata getMetadata() {
-        return this.metadataList.get(0);
     }
 
     private GenericFileData createProductOutput(String filePath) throws WacodisProcessingException {
