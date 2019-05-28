@@ -7,7 +7,6 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import org.esa.snap.core.dataio.ProductIO;
@@ -19,15 +18,14 @@ import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.io.GenericFileData;
-import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.LandCoverClassificationExecutor;
 import org.n52.wacodis.javaps.command.ProcessResult;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
+import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
-//import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
@@ -122,7 +120,7 @@ public class LandCoverClassificationAlgorithm {
 
     @ComplexOutput(
             identifier = "PRODUCT",
-            binding = GenericFileDataBinding.class
+            binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
         return this.createProductOutput(this.product);

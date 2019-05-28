@@ -15,18 +15,16 @@ import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.io.GenericFileData;
-import org.n52.javaps.io.data.binding.complex.GenericFileDataBinding;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
+import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
-import org.n52.wacodis.javaps.io.metadata.TimeFrame;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,7 +88,7 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
     @ComplexOutput(
             identifier = "PRODUCT",
-            binding = GenericFileDataBinding.class
+            binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() {
         return this.product;
