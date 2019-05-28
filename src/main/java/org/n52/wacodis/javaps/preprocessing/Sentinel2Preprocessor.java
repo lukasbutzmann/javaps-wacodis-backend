@@ -5,10 +5,8 @@
  */
 package org.n52.wacodis.javaps.preprocessing;
 
-import com.bc.ceres.core.PrintWriterProgressMonitor;
 import java.io.File;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,8 +20,10 @@ import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Band;
 import org.esa.snap.core.datamodel.Product;
 import org.esa.snap.core.util.ProductUtils;
+import org.n52.wacodis.javaps.LoggerProgressMonitor;
 import org.n52.wacodis.javaps.WacodisProcessingException;
-import org.openide.util.Exceptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Preprocessor for converting a Sentinel-2 image scene from SAFE format to
@@ -33,6 +33,8 @@ import org.openide.util.Exceptions;
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
+
+    private final static Logger LOGGER = LoggerFactory.getLogger(Sentinel2Preprocessor.class);
 
     private static final String TIFF_FILE_EXTENSION = ".tif";
 
@@ -76,7 +78,6 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
 //        Product inProduct = ProductIO.readProduct(inputFilePath);
         if (!isProductTypeSupported(product.getProductType())) {
             throw new WacodisProcessingException("Product type is not supported.");
-
         };
         Band[] bands = product.getBands();
         String productName = product.getName();
@@ -84,9 +85,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
         Map<Integer, Set<Band>> bandMap = groupSpectralRasterBands(bands);
         try {
             if (useAllBands) {
-
                 return createGeotiffForAllBandResolutions(bandMap, product, productName, outputDirectoryPath);
-
             } else {
                 return createGeotiffForHighestBandResolution(bandMap, product, productName, outputDirectoryPath);
             }
@@ -148,7 +147,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
         ProductUtils.copyGeoCoding(inProduct, outProduct);
         ProductUtils.copyMetadata(inProduct, outProduct);
 
-        PrintWriterProgressMonitor monitor = new PrintWriterProgressMonitor(System.out);
+        LoggerProgressMonitor monitor = new LoggerProgressMonitor(LOGGER);
 
         String outFilePath = FilenameUtils.concat(outputDirectoryPath, productName + this.outputFilenamesSuffix + TIFF_FILE_EXTENSION);
 
