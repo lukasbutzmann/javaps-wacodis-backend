@@ -30,7 +30,7 @@ public class SentinelProductMetadataCreator implements ProductMetadataCreator<Pr
 
         TimeFrame timeFrame = new TimeFrame();
         timeFrame.setStartDate(df.format(product.getStartTime().getAsDate()));
-        timeFrame.setEndDate(df.format(product.getStartTime().getAsDate()));
+        timeFrame.setEndDate(df.format(product.getEndTime().getAsDate()));
         return timeFrame;
     }
 
