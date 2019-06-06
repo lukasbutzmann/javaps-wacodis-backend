@@ -19,6 +19,7 @@ public class SentinelProductMetadataCreator implements ProductMetadataCreator<Pr
     @Override
     public ProductMetadata createProductMetadataBinding(Product product) {
         ProductMetadata metadata = new ProductMetadata();
+        metadata.setSourceType("CopernicusDataEnvelope");
         metadata.setTimeFrame(createTimeFrame(product));
         return metadata;
     }

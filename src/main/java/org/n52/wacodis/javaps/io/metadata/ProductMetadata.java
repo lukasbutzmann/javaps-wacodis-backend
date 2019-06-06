@@ -12,6 +12,7 @@ package org.n52.wacodis.javaps.io.metadata;
 public class ProductMetadata {
 
     private TimeFrame timeFrame;
+    private String sourceType;
 
     public TimeFrame getTimeFrame() {
         return timeFrame;
@@ -19,6 +20,14 @@ public class ProductMetadata {
 
     public void setTimeFrame(TimeFrame timeFrame) {
         this.timeFrame = timeFrame;
+    }
+
+    public String getSourceType() {
+        return sourceType;
+    }
+
+    public void setSourceType(String sourceType) {
+        this.sourceType = sourceType;
     }
 
 }
