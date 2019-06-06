@@ -11,24 +11,24 @@ package org.n52.wacodis.javaps.io.metadata;
  */
 public class TimeFrame {
 
-    private String startDate;
+    private String startTime;
 
-    private String endDate;
+    private String endTime;
 
-    public String getStartDate() {
-        return startDate;
+    public String getStartTime() {
+        return startTime;
     }
 
-    public void setStartDate(String startDate) {
-        this.startDate = startDate;
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
-    public String getEndDate() {
-        return endDate;
+    public String getEndTime() {
+        return endTime;
     }
 
-    public void setEndDate(String endDate) {
-        this.endDate = endDate;
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
     }
 
 }

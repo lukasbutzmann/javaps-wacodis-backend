@@ -30,8 +30,8 @@ public class SentinelProductMetadataCreator implements ProductMetadataCreator<Pr
         df.setTimeZone(tz);
 
         TimeFrame timeFrame = new TimeFrame();
-        timeFrame.setStartDate(df.format(product.getStartTime().getAsDate()));
-        timeFrame.setEndDate(df.format(product.getEndTime().getAsDate()));
+        timeFrame.setStartTime(df.format(product.getStartTime().getAsDate()));
+        timeFrame.setEndTime(df.format(product.getEndTime().getAsDate()));
         return timeFrame;
     }
 
