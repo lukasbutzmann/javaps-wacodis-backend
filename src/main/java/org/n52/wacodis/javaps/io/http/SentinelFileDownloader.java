@@ -68,11 +68,10 @@ public class SentinelFileDownloader {
      *
      * @param url URL for the Sentinel-2 image.
      * @param outPath Path to the directory to save the image file in
-     * @param outputFilenameSuffix suffix of the created file
      * @return the file that contains the image
      * @throws IOException if internal file handling fails for some reason
      */
-    public File downloadSentinelFile(String url, String outPath, String outputFilenameSuffix) throws IOException {
+    public File downloadSentinelFile(String url, String outPath) throws IOException {
         LOG.info("Downloading Sentinel product: {}", url);
         File cached = this.resolveProductFromCache(url);
         if (cached != null) {
@@ -87,7 +86,7 @@ public class SentinelFileDownloader {
         };
 
         ResponseExtractor<File> responseExtractor = (ClientHttpResponse response) -> {
-            String fileName = response.getHeaders().getContentDisposition().getFilename() /*+ outputFilenameSuffix*/;
+            String fileName = response.getHeaders().getContentDisposition().getFilename();
             File imageFile = new File(outPath + "/" + fileName);
             FileUtils.copyInputStreamToFile(response.getBody(), imageFile);
             return imageFile;
@@ -104,9 +103,6 @@ public class SentinelFileDownloader {
         return imageFile;
     }
     
-    public File downloadSentinelFile(String url, String outPath) throws IOException{
-        return this.downloadSentinelFile(url, outPath, "");
-    }
 
     private synchronized File resolveProductFromCache(String url) {
         if (this.productToFileCache.containsKey(url)) {

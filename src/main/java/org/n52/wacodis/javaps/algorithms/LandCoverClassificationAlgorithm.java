@@ -151,8 +151,7 @@ public class LandCoverClassificationAlgorithm {
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     opticalImagesSource,
-                    workingDirectory,
-                    namingSuffix);
+                    workingDirectory);
 
             InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
             try {
