@@ -1,0 +1,6 @@
+{
+  "formats": [
+  {"mimeType":"text/json", "default":true},
+  {"mimeType":"application/json"}
+  ]
+}

@@ -7,3 +7,6 @@ nb-configuration*.xml
 .settings
 .project
 .classpath
+/nbproject/
+.factorypath
+
