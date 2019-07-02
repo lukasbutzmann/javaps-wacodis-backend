@@ -81,7 +81,7 @@ public class SentinelFileDownloader {
         };
 
         ResponseExtractor<File> responseExtractor = (ClientHttpResponse response) -> {
-            String fileName = response.getHeaders().getContentDisposition().getFilename() + outputFilenameSuffix;
+            String fileName = response.getHeaders().getContentDisposition().getFilename() /*+ outputFilenameSuffix*/;
             File imageFile = new File(outPath + "/" + fileName);
             FileUtils.copyInputStreamToFile(response.getBody(), imageFile);
             return imageFile;
