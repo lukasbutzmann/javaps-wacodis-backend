@@ -6,7 +6,10 @@
 package org.n52.wacodis.javaps.io.http;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,12 +29,22 @@ import org.springframework.web.client.RestTemplate;
  */
 @Component
 public class SentinelFileDownloader {
+    
+    private final Map<String, File> productToFileCache = new HashMap<>();
 
-    @Autowired
     private WacodisBackendConfig config;
 
-    @Autowired
     private RestTemplate openAccessHubService;
+
+    @Autowired
+    public void setConfig(WacodisBackendConfig config) {
+        this.config = config;
+    }
+    
+    @Autowired
+    public void setOpenAccessHubService(RestTemplate openAccessHubService) {
+        this.openAccessHubService = openAccessHubService;
+    }
 
     /**
      * Downloads a Sentinel-2 image file from the specified URL and writes it to
@@ -39,8 +52,9 @@ public class SentinelFileDownloader {
      *
      * @param url URL for the Sentinel-2 image.
      * @return the file that contains the image
+     * @throws IOException if internal file handling fails for some reason
      */
-    public File downloadSentinelFile(String url) {
+    public File downloadSentinelFile(String url) throws IOException {
         return downloadSentinelFile(url, config.getWorkingDirectory());
     }
 
@@ -52,8 +66,13 @@ public class SentinelFileDownloader {
      * @param outPath Path to the directory to save the image file in
      * @param outputFilenameSuffix suffix of the created file
      * @return the file that contains the image
+     * @throws IOException if internal file handling fails for some reason
      */
-    public File downloadSentinelFile(String url, String outPath, String outputFilenameSuffix) {
+    public File downloadSentinelFile(String url, String outPath, String outputFilenameSuffix) throws IOException {
+        File cached = this.resolveProductFromCache(url);
+        if (cached != null) {
+            return cached;
+        }
 
         // Optional Accept header
         RequestCallback callback = (ClientHttpRequest request) -> {
@@ -67,14 +86,33 @@ public class SentinelFileDownloader {
             FileUtils.copyInputStreamToFile(response.getBody(), imageFile);
             return imageFile;
         };
-
+        
         File imageFile = openAccessHubService.execute(url, HttpMethod.GET, callback, responseExtractor);
+        
+        synchronized (SentinelFileDownloader.this) {
+            productToFileCache.put(url, imageFile);
+        }
 
         return imageFile;
     }
     
-    public File downloadSentinelFile(String url, String outPath){
+    public File downloadSentinelFile(String url, String outPath) throws IOException{
         return this.downloadSentinelFile(url, outPath, "");
+    }
+
+    private synchronized File resolveProductFromCache(String url) {
+        if (this.productToFileCache.containsKey(url)) {
+            File candidateFile = this.productToFileCache.get(url);
+            if (candidateFile != null && candidateFile.exists()) {
+                return candidateFile;
+            } else {
+                // file does not exist any longer, remove it
+                this.productToFileCache.remove(url);
+            }
+        }
+        
+        // no match found
+        return null;
     }
 
 }

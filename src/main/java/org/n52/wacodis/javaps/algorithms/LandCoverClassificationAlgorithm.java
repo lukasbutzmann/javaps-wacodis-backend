@@ -202,7 +202,7 @@ public class LandCoverClassificationAlgorithm {
                 LOGGER.debug("Error while reading setinel data input", ex);
             }
 
-        } catch (WacodisProcessingException ex) {
+        } catch (WacodisProcessingException | IOException ex) {
             String message = "Error while preprocessing reference data";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);

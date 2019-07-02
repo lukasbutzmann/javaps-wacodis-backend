@@ -39,7 +39,7 @@ public class OpenAccessHubConfig {
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
 
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
-        requestBuilder = requestBuilder.setConnectTimeout(20000);
+        requestBuilder = requestBuilder.setConnectTimeout(60000);
 
         HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
         httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
