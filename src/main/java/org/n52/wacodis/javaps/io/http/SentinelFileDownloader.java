@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.io.FileUtils;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -29,6 +31,8 @@ import org.springframework.web.client.RestTemplate;
  */
 @Component
 public class SentinelFileDownloader {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(SentinelFileDownloader.class);
     
     private final Map<String, File> productToFileCache = new HashMap<>();
 
@@ -69,8 +73,10 @@ public class SentinelFileDownloader {
      * @throws IOException if internal file handling fails for some reason
      */
     public File downloadSentinelFile(String url, String outPath, String outputFilenameSuffix) throws IOException {
+        LOG.info("Downloading Sentinel product: {}", url);
         File cached = this.resolveProductFromCache(url);
         if (cached != null) {
+            LOG.info("Returning cached version of the product: {}", url);
             return cached;
         }
 
@@ -88,6 +94,8 @@ public class SentinelFileDownloader {
         };
         
         File imageFile = openAccessHubService.execute(url, HttpMethod.GET, callback, responseExtractor);
+        
+        LOG.info("Downloading of Sentinel product successful: {}", url);
         
         synchronized (SentinelFileDownloader.this) {
             productToFileCache.put(url, imageFile);

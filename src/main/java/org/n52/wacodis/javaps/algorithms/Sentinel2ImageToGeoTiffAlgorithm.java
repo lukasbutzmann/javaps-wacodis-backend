@@ -72,10 +72,13 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
     public void execute() {
         try {
             File sentinelFile = fileDownloader.downloadSentinelFile(imageUrl);
-            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());;
+            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+            
+            LOGGER.info("Converting Sentinel product to GeoTIFF");
             this.product = createProductOutput(sentinelProduct);
 
             ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
+            LOGGER.info("Creating metadata for Sentinel product");
             this.metadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
         } catch (WacodisProcessingException ex) {
             LOGGER.error(ex.getMessage());
