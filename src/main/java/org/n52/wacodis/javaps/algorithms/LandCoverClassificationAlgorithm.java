@@ -69,7 +69,7 @@ public class LandCoverClassificationAlgorithm {
     private String opticalImagesSource;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
-    private String product;
+    private String productName;
     private ProductMetadata productMetadata;
 
     @LiteralInput(
@@ -123,7 +123,7 @@ public class LandCoverClassificationAlgorithm {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.product);
+        return this.createProductOutput(this.productName);
     }
 
     @ComplexOutput(
@@ -176,7 +176,7 @@ public class LandCoverClassificationAlgorithm {
                                     containerName /*docker container name*/);
                     ProcessResult result = executor.executeTool();
                     if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
-                        this.product = new File(workingDirectory, resultFileName).getAbsolutePath();
+                        this.productName = resultFileName;
                     } else { //non-zero Result Code, error occured during tool execution
                         throw new WacodisProcessingException("landcover classification tool (container: "
                                 + containerName
@@ -209,8 +209,8 @@ public class LandCoverClassificationAlgorithm {
     }
 
     private GenericFileData createProductOutput(String filePath) throws WacodisProcessingException {
-        try {
-            return new GenericFileData(new File(filePath), "image/geotiff");
+        try {     
+            return new GenericFileData(new File(this.config.getWorkingDirectory(), filePath), "image/geotiff");
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating generic file data.", ex);
         }
