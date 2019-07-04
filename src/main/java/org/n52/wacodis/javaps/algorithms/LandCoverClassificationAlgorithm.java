@@ -147,7 +147,7 @@ public class LandCoverClassificationAlgorithm {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             File refData = referenceDataFiles.get(0); //.shp
             String trainingData = refData.getName();
-
+            
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     opticalImagesSource,
@@ -176,7 +176,7 @@ public class LandCoverClassificationAlgorithm {
                                     containerName /*docker container name*/);
                     ProcessResult result = executor.executeTool();
                     if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
-                        this.product = resultFileName;
+                        this.product = new File(workingDirectory, resultFileName).getAbsolutePath();
                     } else { //non-zero Result Code, error occured during tool execution
                         throw new WacodisProcessingException("landcover classification tool (container: "
                                 + containerName
