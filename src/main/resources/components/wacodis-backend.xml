@@ -33,9 +33,11 @@
     <bean id="landcoverClassificationConfig"  class="org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig" />
     <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
     <bean id="sentinel2Preprocesor" class="org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor" />
+    <bean id="snapNdviProcess" class="org.n52.wacodis.javaps.algorithms.snap.NdviSnapAlgorithm"/>
     
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
     <bean id="productMetadataGenerator" class="org.n52.wacodis.javaps.io.datahandler.generator.ProductMetadataJsonGenerator" />
     <bean id="productGenerator" class="org.n52.wacodis.javaps.io.datahandler.generator.GeotiffGenerator" />
+    
 
 </beans>
