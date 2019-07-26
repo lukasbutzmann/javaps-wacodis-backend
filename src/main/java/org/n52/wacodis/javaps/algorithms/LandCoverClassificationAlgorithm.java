@@ -7,7 +7,9 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
@@ -35,6 +37,7 @@ import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -48,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
-public class LandCoverClassificationAlgorithm {
+public class LandCoverClassificationAlgorithm implements InitializingBean {
 
     private static final String TIFF_EXTENSION = ".tif";
     private static final String REFERENCEDATA_EPSG = "EPSG:32632";
@@ -72,6 +75,8 @@ public class LandCoverClassificationAlgorithm {
     private String productName;
     private ProductMetadata productMetadata;
 
+    private Map<String, Object> rawInputMap;
+
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
             title = "Optical images source type",
@@ -82,6 +87,7 @@ public class LandCoverClassificationAlgorithm {
             allowedValues = {"Sentinel-2", "Aerial_Image"})
     public void setOpticalImagesSourceType(String value) {
         this.opticalImagesSourceType = value;
+        
     }
 
     @LiteralInput(
@@ -92,6 +98,7 @@ public class LandCoverClassificationAlgorithm {
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
+        rawInputMap.put("OPTICAL_IMAGES_SOURCES", value);
     }
 
     @LiteralInput(
@@ -116,6 +123,7 @@ public class LandCoverClassificationAlgorithm {
     )
     public void setReferenceData(SimpleFeatureCollection value) {
         this.referenceData = value;
+        rawInputMap.put("REFERENCE_DATA", value);
     }
 
     @ComplexOutput(
@@ -206,6 +214,11 @@ public class LandCoverClassificationAlgorithm {
         LOGGER.debug(result.getOutputMessage());
 
     }
+    
+    public Map<String, String> preprocessInputs(Map<String, Object> inputs) {
+        // TODO implement process input preprocessing
+        return null;
+    }
 
     private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
         try {
@@ -213,6 +226,11 @@ public class LandCoverClassificationAlgorithm {
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating generic file data.", ex);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.rawInputMap = new HashMap();
     }
 
 }
