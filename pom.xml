@@ -58,6 +58,11 @@
             <artifactId>javaps-iohandler</artifactId>
             <version>${javaps.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.24</version>            
+        </dependency>
 
 
         <!--GeoTools Dependencies -->
@@ -217,6 +222,12 @@
             <artifactId>s2tbx-s2msi-resampler</artifactId> 
             <version>${s2tbx.version}</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.esa.s1tbx</groupId>
+            <artifactId>s1tbx-op-utilities</artifactId>
+            <version>${s2tbx.version}</version>
+        </dependency>  
        
         <dependency>
             <groupId>junit</groupId>
