@@ -5,7 +5,6 @@
  */
 package org.n52.wacodis.javaps.configuration.tools;
 
-import java.util.List;
 
 /**
  *

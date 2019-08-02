@@ -212,7 +212,6 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
         LOGGER.info("landcover classification docker process finished "
                 + "executing with result code: {}", result.getResultCode());
         LOGGER.debug(result.getOutputMessage());
-
     }
     
     public Map<String, String> preprocessInputs(Map<String, Object> inputs) {

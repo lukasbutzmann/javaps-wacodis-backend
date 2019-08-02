@@ -32,7 +32,7 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Starts the runtime engine and installs thir-party libraries and driver
+        // Starts the runtime engine and installs third-party libraries and driver
         this.engine = Engine.start();
         // Scans for plugins that will be registered with the IIORegistry
         ImageIO.scanForPlugins();
