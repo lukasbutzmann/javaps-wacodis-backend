@@ -21,10 +21,13 @@ import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor;
 import org.n52.wacodis.javaps.algorithms.execution.LandCoverClassificationExecutor;
 import org.n52.wacodis.javaps.command.ProcessResult;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
+import org.n52.wacodis.javaps.configuration.tools.ToolConfig;
+import org.n52.wacodis.javaps.configuration.tools.ToolConfigParser;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
@@ -56,6 +59,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     private static final String TIFF_EXTENSION = ".tif";
     private static final String REFERENCEDATA_EPSG = "EPSG:32632";
     private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
+    private static final String TOOLCONFIGPATH = "land-cover-classification.yml";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
@@ -75,7 +79,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     private String productName;
     private ProductMetadata productMetadata;
 
-    private Map<String, Object> rawInputMap;
+    private Map<String, String> rawInputMap;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -98,7 +102,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
-        rawInputMap.put("OPTICAL_IMAGES_SOURCES", value);
+        //rawInputMap.put("OPTICAL_IMAGES_SOURCES", //tool needs geotiff input instead of sentinel safe
     }
 
     @LiteralInput(
@@ -123,7 +127,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     )
     public void setReferenceData(SimpleFeatureCollection value) {
         this.referenceData = value;
-        rawInputMap.put("REFERENCE_DATA", value);
+        //rawInputMap.put("REFERENCE_DATA", value); //tool needs path to reference data not actual data
     }
 
     @ComplexOutput(
@@ -157,6 +161,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
         try {
             List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
             refData = referenceDataFiles.get(0); //.shp
+            this.rawInputMap.put("REFERENCE_DATA", refData.getPath()); 
 
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
@@ -171,6 +176,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
             imageData = imagePreprocessor.preprocess(
                     sentinelProduct,
                     workingDirectory);
+            this.rawInputMap.put("OPTICAL_IMAGES_SOURCES", imageData.get(0).getName());
         } catch (WacodisProcessingException | IOException ex) {
             String message = "Error while preprocessing input data";
             LOGGER.debug(message, ex);
@@ -184,17 +190,13 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
         String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
         String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
 
-        LandCoverClassificationExecutor executor
-                = new LandCoverClassificationExecutor(
-                        workingDirectory,
-                        imageData.get(0).getName(),
-                        refData.getName(),
-                        resultFileName,
-                        this.toolConfig,
-                        containerName /*docker container name*/);
+
         ProcessResult result;
         try {
-            result = executor.executeTool();
+            this.rawInputMap.put("WORKINGDIRECTORY", this.config.getWorkingDirectory());
+            this.rawInputMap.put("PRODUCT", resultFileName);
+            
+            result = new EoToolExecutor().executeTool(this.rawInputMap, parseToolConfig());
         } catch (Exception ex) {
             String message = "Error while executing land cover docker process";
             LOGGER.debug(message, ex);
@@ -232,4 +234,12 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
         this.rawInputMap = new HashMap();
     }
 
+    
+    private ToolConfig parseToolConfig() throws IOException{
+        ToolConfigParser parser = new ToolConfigParser();        
+        ToolConfig toolConfig = parser.parse(TOOLCONFIGPATH);
+        
+        return toolConfig;
+    }
+    
 }
