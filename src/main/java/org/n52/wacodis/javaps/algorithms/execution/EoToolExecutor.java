@@ -63,6 +63,9 @@ public class EoToolExecutor {
         DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 
         runConfig.addCommandParameter(0, new CommandParameter(cmdConfig.getFolder(), cmdConfig.getName()));
+        
+        //TODO different handling of different command parameter types
+        //TODO strategy for output naming
         //set cmd parameters
         cmdConfig.getArguments().forEach(cmdArgument -> runConfig.addCommandParameter(new CommandParameter(cmdArgument.getName(), input.get(cmdArgument.getValue()))));
         

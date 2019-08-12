@@ -7,6 +7,7 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,10 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
+import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessorExecutor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
+import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -54,9 +57,8 @@ import org.springframework.beans.factory.annotation.Autowired;
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
-public class LandCoverClassificationAlgorithm implements InitializingBean {
+public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
-    private static final String TIFF_EXTENSION = ".tif";
     private static final String REFERENCEDATA_EPSG = "EPSG:32632";
     private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
     private static final String TOOLCONFIGPATH = "land-cover-classification.yml";
@@ -69,17 +71,12 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     @Autowired
     private WacodisBackendConfig config;
 
-    @Autowired
-    private LandCoverClassificationConfig toolConfig;
-
     private String opticalImagesSourceType;
     private String opticalImagesSource;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
-    private String productName;
     private ProductMetadata productMetadata;
-
-    private Map<String, String> rawInputMap;
+    private Product sentinelProduct;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -91,7 +88,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
             allowedValues = {"Sentinel-2", "Aerial_Image"})
     public void setOpticalImagesSourceType(String value) {
         this.opticalImagesSourceType = value;
-        
+
     }
 
     @LiteralInput(
@@ -102,7 +99,6 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
-        //rawInputMap.put("OPTICAL_IMAGES_SOURCES", //tool needs geotiff input instead of sentinel safe
     }
 
     @LiteralInput(
@@ -127,7 +123,6 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     )
     public void setReferenceData(SimpleFeatureCollection value) {
         this.referenceData = value;
-        //rawInputMap.put("REFERENCE_DATA", value); //tool needs path to reference data not actual data
     }
 
     @ComplexOutput(
@@ -135,7 +130,7 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.productName);
+        return this.createProductOutput(this.getProductName());
     }
 
     @ComplexOutput(
@@ -148,77 +143,10 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
 
     @Execute
     public void execute() throws WacodisProcessingException {
+        this.execute();
 
-        String workingDirectory = config.getWorkingDirectory();
-        String namingSuffix = "_" + System.currentTimeMillis(); //common suffix for output files and containers
-
-        List<File> imageData;
-        File refData;
-
-        //TODO preprocess training data for each input image (need to adjust wps input)
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, namingSuffix); //set spatial reference system and output filename suffix, TODO: detect srs from input data
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        try {
-            List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
-            refData = referenceDataFiles.get(0); //.shp
-            this.rawInputMap.put("REFERENCE_DATA", refData.getPath()); 
-
-            // Download satellite data
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    opticalImagesSource,
-                    workingDirectory);
-
-            InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
-
-            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-            this.productMetadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
-            // convert sentinel images to GeoTIFF files
-            imageData = imagePreprocessor.preprocess(
-                    sentinelProduct,
-                    workingDirectory);
-            this.rawInputMap.put("OPTICAL_IMAGES_SOURCES", imageData.get(0).getName());
-        } catch (WacodisProcessingException | IOException ex) {
-            String message = "Error while preprocessing input data";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
-        }
-
-        if (imageData.isEmpty()) {
-            throw new WacodisProcessingException("No image data for processing available");
-        }
-
-        String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
-        String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
-
-
-        ProcessResult result;
-        try {
-            this.rawInputMap.put("WORKINGDIRECTORY", this.config.getWorkingDirectory());
-            this.rawInputMap.put("PRODUCT", resultFileName);
-            
-            result = new EoToolExecutor().executeTool(this.rawInputMap, parseToolConfig());
-        } catch (Exception ex) {
-            String message = "Error while executing land cover docker process";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
-        }
-        if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
-            this.productName = resultFileName;
-        } else { //non-zero Result Code, error occured during tool execution
-            throw new WacodisProcessingException("landcover classification tool (container: "
-                    + containerName
-                    + " )exited with a non-zero result code, result code was "
-                    + result.getResultCode()
-                    + ", consult tool specific documentation for details");
-        }
-        LOGGER.info("landcover classification docker process finished "
-                + "executing with result code: {}", result.getResultCode());
-        LOGGER.debug(result.getOutputMessage());
-    }
-    
-    public Map<String, String> preprocessInputs(Map<String, Object> inputs) {
-        // TODO implement process input preprocessing
-        return null;
+        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
     }
 
     private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
@@ -230,16 +158,42 @@ public class LandCoverClassificationAlgorithm implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-        this.rawInputMap = new HashMap();
+    public List<InputDataPreprocessorExecutor> defineInputdataPreprocessing() throws WacodisProcessingException {
+        List<InputDataPreprocessorExecutor> preprocessorExecutionList = new ArrayList();
+
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.getNamingSuffix());
+        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
+
+        preprocessorExecutionList.add(
+                new InputDataPreprocessorExecutor(this.referenceData, referencePreprocessor, this.config.getWorkingDirectory(), "REFERENCE_DATA"));
+
+        try {
+            // Download satellite data
+            File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                    this.opticalImagesSource,
+                    this.config.getWorkingDirectory());
+            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+
+            preprocessorExecutionList.add(
+                    new InputDataPreprocessorExecutor(sentinelProduct, imagePreprocessor, this.config.getWorkingDirectory(), "OPTICAL_IMAGES_SOURCES"));
+
+        } catch (IOException ex) {
+            String message = "Error while reading Sentinel file";
+            LOGGER.debug(message, ex);
+            throw new WacodisProcessingException(message, ex);
+        }
+
+        return preprocessorExecutionList;
     }
 
-    
-    private ToolConfig parseToolConfig() throws IOException{
-        ToolConfigParser parser = new ToolConfigParser();        
-        ToolConfig toolConfig = parser.parse(TOOLCONFIGPATH);
-        
-        return toolConfig;
+    @Override
+    public String getToolConfigPath() {
+        return TOOLCONFIGPATH;
     }
-    
+
+    @Override
+    public String getResultNamePrefix() {
+        return RESULTNAMEPREFIX;
+    }
+
 }
