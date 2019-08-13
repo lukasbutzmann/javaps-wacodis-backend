@@ -39,7 +39,7 @@ public abstract class AbstractAlgorithm {
     private String namingSuffix;
     private String productName;
 
-    public void execute() throws WacodisProcessingException {
+    public void executeProcess() throws WacodisProcessingException {
 
         this.namingSuffix = "_" + System.currentTimeMillis();
 

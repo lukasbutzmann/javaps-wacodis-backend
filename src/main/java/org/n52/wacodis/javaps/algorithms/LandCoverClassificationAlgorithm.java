@@ -143,7 +143,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     @Execute
     public void execute() throws WacodisProcessingException {
-        this.execute();
+        this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
         this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
