@@ -20,8 +20,8 @@ public class ToolExecutionConfigParserTest {
     @Test
     public void testConfigParsing() throws IOException {
         ToolConfigParser parser = new ToolConfigParser();
-        ToolConfig config = parser.parse("land-cover-classification.yml");
-        
+        ToolConfig config = parser.parse(ClassLoader.getSystemResourceAsStream("land-cover-classification.yml"));
+
         Assert.assertEquals("land-cover-classification", config.getId());
         Assert.assertFalse(config.getCommand().getArguments().isEmpty());
     }
