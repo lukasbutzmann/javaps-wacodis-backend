@@ -14,6 +14,7 @@ public class DockerConfig {
     private String host;
     private String image;
     private String container;
+    private String workDir;
 
     public String getHost() {
         return host;
@@ -38,7 +39,14 @@ public class DockerConfig {
     public void setContainer(String container) {
         this.container = container;
     }
-    
+
+    public String getWorkDir() {
+        return workDir;
+    }
+
+    public void setWorkDir(String workDir) {
+        this.workDir = workDir;
+    }
     
 
 }
