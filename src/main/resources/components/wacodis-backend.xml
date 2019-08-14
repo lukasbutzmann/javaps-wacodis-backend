@@ -33,6 +33,8 @@
     <bean id="landcoverClassificationConfig"  class="org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig" />
     <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
     <bean id="sentinel2Preprocesor" class="org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor" />
+    <bean id="toolConfigParser" class="org.n52.wacodis.javaps.configuration.tools.ToolConfigParser" />
+    <bean id="eoToolExecutor" class="org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor" />
     
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
     <bean id="productMetadataGenerator" class="org.n52.wacodis.javaps.io.datahandler.generator.ProductMetadataJsonGenerator" />
