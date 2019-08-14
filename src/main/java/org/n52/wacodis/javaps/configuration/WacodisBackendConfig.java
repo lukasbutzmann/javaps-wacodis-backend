@@ -26,8 +26,15 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
     @Value("${wacodis.javaps.workdir}")
     private String workingDirectory;
 
+    @Value("${wacodis.javaps.toolConfigDir}")
+    private String toolConfigDirectory;
+
     public String getWorkingDirectory() {
         return workingDirectory;
+    }
+
+    public String getToolConfigDirectory() {
+        return toolConfigDirectory;
     }
 
     @Override
