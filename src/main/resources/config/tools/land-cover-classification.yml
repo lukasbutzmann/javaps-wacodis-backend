@@ -1,6 +1,6 @@
 id: land-cover-classification
 docker:
-    host: unix:///var/run/docker.sock
+    host: tcp://localhost:2375
     image: dlm_docker:wacodis-eo-hackathon
     container: wacodis-eo-dlm
     workDir: /public
