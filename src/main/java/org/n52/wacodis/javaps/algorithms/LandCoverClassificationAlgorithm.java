@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -33,9 +34,9 @@ import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
+import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,8 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private static final String TIFF_EXTENSION = ".tif";
     private static final String REFERENCEDATA_EPSG = "EPSG:32632";
     private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
-    private static final String TOOLCONFIGPATH = "land-cover-classification.yml";
+    private static final String TOOL_CONFIG = "land-cover-classification.yml";
+    private static final String GPF_FILE = "S2_GeoTIFF_Composition.xml";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
@@ -159,7 +161,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     @Override
     public String getToolConfigName() {
-        return TOOLCONFIGPATH;
+        return TOOL_CONFIG;
     }
 
     @Override
@@ -179,7 +181,8 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
+//        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), TIFF_EXTENSION, this.getNamingSuffix());
 
         try {
             // Download satellite data
