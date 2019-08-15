@@ -29,12 +29,19 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
     @Value("${wacodis.javaps.toolConfigDir}")
     private String toolConfigDirectory;
 
+    @Value("${wacodis.javaps.gpfDir}")
+    private String gpfDir;
+
     public String getWorkingDirectory() {
         return workingDirectory;
     }
 
     public String getToolConfigDirectory() {
         return toolConfigDirectory;
+    }
+
+    public String getGpfDir() {
+        return gpfDir;
     }
 
     @Override
