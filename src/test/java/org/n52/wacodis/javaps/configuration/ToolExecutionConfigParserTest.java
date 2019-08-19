@@ -23,6 +23,16 @@ public class ToolExecutionConfigParserTest {
         ToolConfig config = parser.parse(ClassLoader.getSystemResourceAsStream("land-cover-classification.yml"));
 
         Assert.assertEquals("land-cover-classification", config.getId());
+        
+        Assert.assertEquals("tcp://localhost:2375", config.getDocker().getHost());
+        Assert.assertEquals("dlm_docker:wacodis-eo-hackathon", config.getDocker().getImage());
+        Assert.assertEquals("wacodis-eo-dlm", config.getDocker().getContainer());
+        Assert.assertEquals("/public", config.getDocker().getWorkDir());
+        
+        Assert.assertEquals("4326", config.getParameter().getInputEpsg());
+        
+        Assert.assertEquals("/bin/ash", config.getCommand().getFolder());
+        Assert.assertEquals("/eo.sh", config.getCommand().getName());
         Assert.assertFalse(config.getCommand().getArguments().isEmpty());
     }
 

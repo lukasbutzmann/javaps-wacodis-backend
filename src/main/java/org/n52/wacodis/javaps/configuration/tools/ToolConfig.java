@@ -5,7 +5,6 @@
  */
 package org.n52.wacodis.javaps.configuration.tools;
 
-
 /**
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
@@ -15,6 +14,7 @@ public class ToolConfig {
     private String id;
     private DockerConfig docker;
     private CommandConfig command;
+    private ParameterConfig parameter;
 
     public String getId() {
         return id;
@@ -38,6 +38,14 @@ public class ToolConfig {
 
     public void setCommand(CommandConfig command) {
         this.command = command;
-    }   
+    }
+
+    public ParameterConfig getParameter() {
+        return parameter;
+    }
+
+    public void setParameter(ParameterConfig parameter) {
+        this.parameter = parameter;
+    }
 
 }
