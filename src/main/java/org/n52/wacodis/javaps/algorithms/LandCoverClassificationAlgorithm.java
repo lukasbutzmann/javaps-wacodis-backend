@@ -192,7 +192,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
 
         } catch (IOException ex) {
-            String message = "Error while reading Sentinel file";
+            String message = "Error while retrieving Sentinel file";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
