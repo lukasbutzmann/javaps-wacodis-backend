@@ -18,12 +18,14 @@ public class InputDataPreprocessorExecutor<T> {
     private T inputData;
     private InputDataPreprocessor<T> preprocessor;
     private String outputDirectoryPath;
+    private String epsg;
     private String processInputId;
 
-    public InputDataPreprocessorExecutor(T inputData, InputDataPreprocessor<T> preprocessor, String outputDirectoryPath, String processInputId) {
+    public InputDataPreprocessorExecutor(T inputData, InputDataPreprocessor<T> preprocessor, String outputDirectoryPath, String epsg, String processInputId) {
         this.inputData = inputData;
         this.preprocessor = preprocessor;
         this.outputDirectoryPath = outputDirectoryPath;
+        this.epsg = epsg;
         this.processInputId = processInputId;
     }
 
@@ -32,6 +34,6 @@ public class InputDataPreprocessorExecutor<T> {
     }
 
     public List<File> execute() throws WacodisProcessingException {
-        return preprocessor.preprocess(inputData, outputDirectoryPath);
+        return preprocessor.preprocess(inputData, outputDirectoryPath, epsg);
     }
 }

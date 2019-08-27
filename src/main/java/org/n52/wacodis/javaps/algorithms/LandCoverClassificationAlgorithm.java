@@ -183,20 +183,18 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
 //        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
         InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), TIFF_EXTENSION, this.getNamingSuffix());
-
+        
         try {
             // Download satellite data
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    this.opticalImagesSource,
-                    this.config.getWorkingDirectory());
-            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+            //File sentinelFile = sentinelDownloader.downloadSentinelFile(this.opticalImagesSource,this.config.getWorkingDirectory());
+            this.sentinelProduct = ProductIO.readProduct("C:\\WaCoDiS\\javaPS\\webapp\\path\\to\\workdir\\S2B_MSIL2A_20181010T104019_N0209_R008_T32ULB_20181010T171128.zip");
 
         } catch (IOException ex) {
             String message = "Error while reading Sentinel file";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
-        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
+        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory(), this.config.getEpsg());
 
         MultipleCommandValue value = new MultipleCommandValue();
         value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
@@ -207,7 +205,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
         InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.getNamingSuffix());
 
-        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
+        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory(), this.config.getEpsg());
 
         SingleCommandValue value = new SingleCommandValue();
         value.setCommandValue(preprocessedReferenceData.get(0).getName());

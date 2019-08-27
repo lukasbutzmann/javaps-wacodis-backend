@@ -107,9 +107,10 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
     private GenericFileData createProductOutput(Product sentinelProduct) throws WacodisProcessingException {
         String targetDirectory = config.getWorkingDirectory();
+        String epsg = config.getEpsg();
         InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
 
-        List<File> outputs = preprocessor.preprocess(sentinelProduct, targetDirectory);
+        List<File> outputs = preprocessor.preprocess(sentinelProduct, targetDirectory, epsg);
 
         try {
             return new GenericFileData(outputs.get(0), "image/geotiff");

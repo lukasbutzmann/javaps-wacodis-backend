@@ -21,9 +21,10 @@ public interface InputDataPreprocessor<T> {
      *
      * @param input input data
      * @param outputDirectoryPath path to the directory for storing the
+     * @param epsg code for crs
      * preprocessed data
      * @return list of preprocessed files
      * @throws IOException
      */
-    public List<File> preprocess(T input, String outputDirectoryPath) throws WacodisProcessingException;
+    public List<File> preprocess(T input, String outputDirectoryPath, String epsg) throws WacodisProcessingException;
 }

@@ -74,7 +74,7 @@ public class Sentinel2Preprocessor implements InputDataPreprocessor<Product> {
     }
 
     @Override
-    public List<File> preprocess(Product product, String outputDirectoryPath) throws WacodisProcessingException {
+    public List<File> preprocess(Product product, String outputDirectoryPath, String epsg) throws WacodisProcessingException {
 //        Product inProduct = ProductIO.readProduct(inputFilePath);
         if (!isProductTypeSupported(product.getProductType())) {
             throw new WacodisProcessingException("Product type is not supported.");

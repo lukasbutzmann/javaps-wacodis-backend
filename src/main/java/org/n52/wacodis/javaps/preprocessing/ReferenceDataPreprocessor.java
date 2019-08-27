@@ -18,6 +18,7 @@ import org.geotools.data.Transaction;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
+import org.geotools.data.store.ReprojectingFeatureCollection;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
@@ -37,6 +38,7 @@ import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.referencing.FactoryException;
+import org.openide.util.Exceptions;
 
 /**
  *
@@ -95,7 +97,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     }
 
     /**
-     * writes a SimpleFeatureCollection to a Shapefile,
+     * reprojects and writes a SimpleFeatureCollection to a Shapefile,
      *
      * @param inputCollection features must have a attribute 'class' of type
      * Long or Integer
@@ -106,7 +108,13 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      * @throws WacodisProcessingException
      */
     @Override
-    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
+    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath, String targetepsg) throws WacodisProcessingException {
+        
+            //reproject inputCollection
+            this.setEpsg(targetepsg);
+            CoordinateReferenceSystem crs = decodeCRS(epsg);
+            ReprojectingFeatureCollection reprojectInputCollection = new ReprojectingFeatureCollection(inputCollection, crs);
+        
         try {
             File[] outputFiles = generateOutputFileNames(outputDirectoryPath);
             File referenceDataShapefile = outputFiles[0]; //.shp
@@ -128,29 +136,27 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
                 throw new WacodisProcessingException(msg);
             }
 
-            boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
+            boolean isInputSchemaValid = validateInputSchema(reprojectInputCollection.getSchema());
             if (!isInputSchemaValid) {
                 String msg = "cannot write features, input schema is invalid";
                 LOGGER.debug(msg);
                 throw new WacodisProcessingException(msg);
             }
-
+            
             //create new shapefile datastore with schema for trainig data
             DataStore dataStore = dataStoreFactory.createNewDataStore(params);
-            CoordinateReferenceSystem crs = determineCRS();
-            Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
+            Class geometryBinding = getGeometryTypeFromSchema(reprojectInputCollection.getSchema());
             SimpleFeatureType outputSchema = createReferenceDataFeatureType(crs, geometryBinding); //traning data schema
             dataStore.createSchema(outputSchema);
-
-            writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
-
+            
+            writeFeaturesToDataStore(dataStore, reprojectInputCollection, referenceDataShapefile); //write features to shapefile
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
         }
     }
 
-    private void writeFeaturesToDataStore(DataStore dataStore, SimpleFeatureCollection inputCollection, File referenceDataFile) throws IOException {
+    private void writeFeaturesToDataStore(DataStore dataStore, SimpleFeatureCollection reprojectInputCollection, File referenceDataFile) throws IOException {
         Transaction transaction = new DefaultTransaction("create");
 
         String typeName = dataStore.getTypeNames()[0];
@@ -163,7 +169,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             try {
                 LOGGER.debug("starting transaction for file " + referenceDataFile.getName());
 
-                featureStore.addFeatures(inputCollection);
+                featureStore.addFeatures(reprojectInputCollection);
                 transaction.commit();
 
                 LOGGER.debug("successfully commited to file " + referenceDataFile.getName());
