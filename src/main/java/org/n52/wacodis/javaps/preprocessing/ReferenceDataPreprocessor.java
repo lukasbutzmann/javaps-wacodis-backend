@@ -38,7 +38,6 @@ import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
 import org.opengis.referencing.FactoryException;
-import org.openide.util.Exceptions;
 
 /**
  *
@@ -52,26 +51,30 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     private static final String LANDCOVERCLASS_ATTRIBUTE = "class";
     private static final String[] SHAPEFILE_EXTENSIONS = new String[]{"shp", "shx", "dbf", "prj", "fix"};
 
-    private String epsg;
+    private String sourceEpsg;
+    private String targetEpsg;
     private String outputFilenamesSuffix;
 
     /**
-     * @param epsg set srs for resulting shapefile, assumes WGS84 if not set
+     * @param sourceEpsg set srs for origin SimpleFeatureCollection
+     * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not set
      */
-    public ReferenceDataPreprocessor(String epsg) {
-        this.epsg = epsg;
+    public ReferenceDataPreprocessor(String sourceEpsg, String targetEpsg) {
+        this.sourceEpsg = sourceEpsg;
+        this.targetEpsg = targetEpsg;
     }
 
-    public ReferenceDataPreprocessor(String epsg, String outputFilenamesSuffix) {
-        this.epsg = epsg;
+    public ReferenceDataPreprocessor(String sourceEpsg, String targetEpsg, String outputFilenamesSuffix) {
+        this.sourceEpsg = sourceEpsg;
+        this.targetEpsg = targetEpsg;
         this.outputFilenamesSuffix = outputFilenamesSuffix;
     }
 
     public ReferenceDataPreprocessor() {
     }
 
-    public String getEpsg() {
-        return epsg;
+    public String getTargetEpsg() {
+        return targetEpsg;
     }
 
     public String getOutputFilenamesSuffix() {
@@ -90,10 +93,10 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     /**
      * set srs for resulting shapefile, assumes WGS84 if not set
      *
-     * @param epsg
+     * @param targetEpsg
      */
-    public void setEpsg(String epsg) {
-        this.epsg = epsg;
+    public void setTargetEpsg(String targetEpsg) {
+        this.targetEpsg = targetEpsg;
     }
 
     /**
@@ -108,12 +111,12 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      * @throws WacodisProcessingException
      */
     @Override
-    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath, String targetepsg) throws WacodisProcessingException {
+    public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
         
             //reproject inputCollection
-            this.setEpsg(targetepsg);
-            CoordinateReferenceSystem crs = decodeCRS(epsg);
-            ReprojectingFeatureCollection reprojectInputCollection = new ReprojectingFeatureCollection(inputCollection, crs);
+            CoordinateReferenceSystem sourceCrs = decodeCRS(sourceEpsg);
+            CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
+            ReprojectingFeatureCollection reprojectInputCollection = new ReprojectingFeatureCollection(inputCollection, sourceCrs, targetCrs);
         
         try {
             File[] outputFiles = generateOutputFileNames(outputDirectoryPath);
@@ -146,7 +149,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             //create new shapefile datastore with schema for trainig data
             DataStore dataStore = dataStoreFactory.createNewDataStore(params);
             Class geometryBinding = getGeometryTypeFromSchema(reprojectInputCollection.getSchema());
-            SimpleFeatureType outputSchema = createReferenceDataFeatureType(crs, geometryBinding); //traning data schema
+            SimpleFeatureType outputSchema = createReferenceDataFeatureType(targetCrs, geometryBinding); //traning data schema
             dataStore.createSchema(outputSchema);
             
             writeFeaturesToDataStore(dataStore, reprojectInputCollection, referenceDataShapefile); //write features to shapefile
@@ -267,10 +270,10 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     private CoordinateReferenceSystem determineCRS() {
         CoordinateReferenceSystem crs;
 
-        if (this.epsg != null) {
-            crs = decodeCRS(this.epsg);
+        if (this.targetEpsg != null) {
+            crs = decodeCRS(this.targetEpsg);
         } else {
-            LOGGER.warn("epsg is not set, assume default crs WGS84");
+            LOGGER.warn("targetEpsg is not set, assume default crs WGS84");
             crs = DefaultGeographicCRS.WGS84;
         }
 

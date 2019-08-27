@@ -173,7 +173,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
+        //inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
         inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
         inputArgumentValues.put("RESULT_PATH", this.getResultPath());
 
@@ -182,19 +182,23 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
 //        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
-        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), TIFF_EXTENSION, this.getNamingSuffix());
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put("epsg",this.config.getEpsg());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
         
         try {
             // Download satellite data
-            //File sentinelFile = sentinelDownloader.downloadSentinelFile(this.opticalImagesSource,this.config.getWorkingDirectory());
-            this.sentinelProduct = ProductIO.readProduct("C:\\WaCoDiS\\javaPS\\webapp\\path\\to\\workdir\\S2B_MSIL2A_20181010T104019_N0209_R008_T32ULB_20181010T171128.zip");
+            File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                    this.opticalImagesSource,
+                    this.config.getWorkingDirectory());
+            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
 
         } catch (IOException ex) {
             String message = "Error while reading Sentinel file";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
-        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory(), this.config.getEpsg());
+        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
 
         MultipleCommandValue value = new MultipleCommandValue();
         value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
@@ -203,10 +207,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.getNamingSuffix());
-
-        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory(), this.config.getEpsg());
-
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.config.getEpsg(), this.getNamingSuffix());
+        
+        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
+        
         SingleCommandValue value = new SingleCommandValue();
         value.setCommandValue(preprocessedReferenceData.get(0).getName());
         return value;

@@ -24,8 +24,6 @@ public class GptExecutorTest {
     private static final String INPUT_PARAM_VALUE = ".path/to/input.zip";
     private static final String OUTPUT_PARAM_KEY = "output";
     private static final String OUTPUT_PARAM_VALUE = ".path/to/output.zip";
-    private static final String EPSG_PARAM_KEY = "epsg";
-    private static final String EPSG_PARAM_VALUE = "EPSG:4326";
     private static final String GRAPH_FILE = "./path/to/graphFile.xml";
 
     private GptArguments arguments;
@@ -35,18 +33,16 @@ public class GptExecutorTest {
         Map<String, String> parameters = new HashMap();
         parameters.put(INPUT_PARAM_KEY, INPUT_PARAM_VALUE);
         parameters.put(OUTPUT_PARAM_KEY, OUTPUT_PARAM_VALUE);
-        parameters.put(EPSG_PARAM_KEY, EPSG_PARAM_VALUE);
         this.arguments = new GptArguments(GRAPH_FILE, parameters);
     }
 
     @Test
     public void testPrepareArguments() {
 
-        String[] resultArgs = new String[4];
+        String[] resultArgs = new String[3];
         resultArgs[0] = GRAPH_FILE;
         resultArgs[1] = "-P" + INPUT_PARAM_KEY + "=" + INPUT_PARAM_VALUE;
         resultArgs[2] = "-P" + OUTPUT_PARAM_KEY + "=" + OUTPUT_PARAM_VALUE;
-        resultArgs[3] = "-P" + EPSG_PARAM_KEY + "=" + EPSG_PARAM_VALUE;
         Arrays.sort(resultArgs);
 
         GptExecutor executor = new GptExecutor();
