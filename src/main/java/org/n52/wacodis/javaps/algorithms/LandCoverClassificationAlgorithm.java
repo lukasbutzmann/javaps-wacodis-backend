@@ -173,7 +173,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        //inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
         inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
         inputArgumentValues.put("RESULT_PATH", this.getResultPath());
 
