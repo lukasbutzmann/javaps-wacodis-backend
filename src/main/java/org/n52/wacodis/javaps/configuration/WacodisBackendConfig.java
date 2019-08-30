@@ -31,6 +31,9 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
 
     @Value("${wacodis.javaps.gpfDir}")
     private String gpfDir;
+    
+    @Value("${wacodis.javaps.epsg}")
+    private String epsg;
 
     public String getWorkingDirectory() {
         return workingDirectory;
@@ -43,10 +46,14 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
     public String getGpfDir() {
         return gpfDir;
     }
+    
+    public String getEpsg() {
+        return epsg;
+    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Starts the runtime engine and installs third-party libraries and driver
+        // Starts the runtime engine and installs third-party libraries and driver  
         this.engine = Engine.start();
         // Scans for plugins that will be registered with the IIORegistry
         ImageIO.scanForPlugins();

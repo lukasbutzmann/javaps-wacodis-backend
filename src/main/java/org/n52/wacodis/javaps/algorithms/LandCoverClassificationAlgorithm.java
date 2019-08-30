@@ -182,8 +182,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
 //        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
-        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), TIFF_EXTENSION, this.getNamingSuffix());
-
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put("epsg",this.config.getEpsg());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+        
         try {
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
@@ -205,10 +207,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.getNamingSuffix());
-
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.config.getEpsg(), this.getNamingSuffix());
+        
         List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
-
+        
         SingleCommandValue value = new SingleCommandValue();
         value.setCommandValue(preprocessedReferenceData.get(0).getName());
         return value;

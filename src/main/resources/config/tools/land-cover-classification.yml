@@ -4,6 +4,8 @@ docker:
     image: dlm_docker:wacodis-eo-hackathon
     container: wacodis-eo-dlm
     workDir: /public
+parameter:
+    inputEpsg: 4326
 command:
     folder: /bin/ash
     name: /eo.sh
@@ -19,4 +21,8 @@ command:
         - name: -result
           type: wps-process-reference
           value: RESULT_PATH
+          quantity: single
+        - name: -epsg
+          type: static-option
+          value: 4326
           quantity: single
