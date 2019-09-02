@@ -30,6 +30,7 @@ import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
+import org.n52.wacodis.javaps.io.data.binding.complex.SentinelProductBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
@@ -89,14 +90,15 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     }
 
-    @LiteralInput(
+    @ComplexInput(
             identifier = "OPTICAL_IMAGES_SOURCES",
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 1)
-    public void setOpticalImagesSources(String value) {
-        this.opticalImagesSource = value;
+            maxOccurs = 1,
+            binding = SentinelProductBinding.class)
+    public void setOpticalImagesSources(Product value) {
+//        this.opticalImagesSource = value;
     }
 
     @LiteralInput(
