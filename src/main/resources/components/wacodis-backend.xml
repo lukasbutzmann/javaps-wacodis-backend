@@ -39,5 +39,6 @@
     <bean id="gml3Parser" class="org.n52.wacodis.javaps.io.datahandler.parser.Gml3Parser" />
     <bean id="productMetadataGenerator" class="org.n52.wacodis.javaps.io.datahandler.generator.ProductMetadataJsonGenerator" />
     <bean id="productGenerator" class="org.n52.wacodis.javaps.io.datahandler.generator.GeotiffGenerator" />
+    <bean id="geometryUtils" class="org.n52.wacodis.javaps.utils.GeometryUtils" />
 
 </beans>
