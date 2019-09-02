@@ -17,8 +17,10 @@ import org.n52.javaps.io.DecodingException;
 import org.n52.javaps.io.InputHandler;
 import org.n52.shetland.ogc.wps.Format;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
+import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.xml.sax.SAXException;
 
 /**
@@ -30,6 +32,9 @@ public class Gml3Parser extends AbstractPropertiesInputOutputHandler implements 
 
     private static Logger LOG = LoggerFactory.getLogger(Gml3Parser.class);
 
+    @Autowired
+    private GeometryUtils geomUtils;
+
     public Gml3Parser() {
         super();
         // Setting the system-wide default at startup time
@@ -39,7 +44,9 @@ public class Gml3Parser extends AbstractPropertiesInputOutputHandler implements 
 
     @Override
     public FeatureCollectionBinding parse(TypedProcessInputDescription<?> description, InputStream input, Format format) throws IOException, DecodingException {
+//        String gmlString = IOUtils.toString(input, "UTF-8");
         GML gml = new GML(GML.Version.GML3);
+        gml.setCoordinateReferenceSystem((geomUtils.decodeCRS(GeometryUtils.DEFAULT_INPUT_EPSG)));
         try {
             SimpleFeatureCollection fc = gml.decodeFeatureCollection(input);
             return new FeatureCollectionBinding(fc);

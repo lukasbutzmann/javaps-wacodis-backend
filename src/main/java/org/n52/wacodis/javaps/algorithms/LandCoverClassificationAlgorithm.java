@@ -37,6 +37,7 @@ import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
+import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,7 +56,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private static final String TIFF_EXTENSION = ".tif";
-    private static final String REFERENCEDATA_EPSG = "EPSG:32632";
     private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
     private static final String TOOL_CONFIG = "land-cover-classification.yml";
     private static final String GPF_FILE = "S2_GeoTIFF_Composition.xml";
@@ -181,11 +181,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-//        InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, this.getNamingSuffix());
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("epsg",this.config.getEpsg());
+        parameters.put("epsg", this.config.getEpsg());
         InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
-        
+
         try {
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
@@ -207,10 +206,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, this.config.getEpsg(), this.getNamingSuffix());
-        
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.config.getEpsg(), this.getNamingSuffix());
+
         List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
-        
+
         SingleCommandValue value = new SingleCommandValue();
         value.setCommandValue(preprocessedReferenceData.get(0).getName());
         return value;

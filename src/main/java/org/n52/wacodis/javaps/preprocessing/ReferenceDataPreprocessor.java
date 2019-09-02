@@ -57,7 +57,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     /**
      * @param sourceEpsg set srs for origin SimpleFeatureCollection
-     * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not set
+     * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not
+     * set
      */
     public ReferenceDataPreprocessor(String sourceEpsg, String targetEpsg) {
         this.sourceEpsg = sourceEpsg;
@@ -112,12 +113,15 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      */
     @Override
     public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
-        
+
+        CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
+        if (!sourceEpsg.equals(targetEpsg)) {
             //reproject inputCollection
             CoordinateReferenceSystem sourceCrs = decodeCRS(sourceEpsg);
-            CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
-            ReprojectingFeatureCollection reprojectInputCollection = new ReprojectingFeatureCollection(inputCollection, sourceCrs, targetCrs);
-        
+
+            inputCollection = new ReprojectingFeatureCollection(inputCollection, targetCrs);
+        }
+
         try {
             File[] outputFiles = generateOutputFileNames(outputDirectoryPath);
             File referenceDataShapefile = outputFiles[0]; //.shp
@@ -139,20 +143,20 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
                 throw new WacodisProcessingException(msg);
             }
 
-            boolean isInputSchemaValid = validateInputSchema(reprojectInputCollection.getSchema());
+            boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
             if (!isInputSchemaValid) {
                 String msg = "cannot write features, input schema is invalid";
                 LOGGER.debug(msg);
                 throw new WacodisProcessingException(msg);
             }
-            
+
             //create new shapefile datastore with schema for trainig data
             DataStore dataStore = dataStoreFactory.createNewDataStore(params);
-            Class geometryBinding = getGeometryTypeFromSchema(reprojectInputCollection.getSchema());
+            Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
             SimpleFeatureType outputSchema = createReferenceDataFeatureType(targetCrs, geometryBinding); //traning data schema
             dataStore.createSchema(outputSchema);
-            
-            writeFeaturesToDataStore(dataStore, reprojectInputCollection, referenceDataShapefile); //write features to shapefile
+
+            writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
