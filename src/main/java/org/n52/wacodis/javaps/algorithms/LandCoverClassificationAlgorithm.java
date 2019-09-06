@@ -21,6 +21,7 @@ import org.n52.javaps.algorithm.annotation.ComplexInput;
 import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
+import org.n52.javaps.gt.io.data.binding.complex.GTVectorDataBinding;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
@@ -117,7 +118,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             abstrakt = "Reference data for land cover classification",
             minOccurs = 1,
             maxOccurs = 1,
-            binding = FeatureCollectionBinding.class
+            binding = GTVectorDataBinding.class
     )
     public void setReferenceData(SimpleFeatureCollection value) {
         this.referenceData = value;
