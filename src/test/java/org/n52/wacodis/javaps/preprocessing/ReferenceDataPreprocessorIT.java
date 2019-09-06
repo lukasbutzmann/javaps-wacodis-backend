@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.commons.io.FileUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
@@ -77,10 +78,7 @@ public class ReferenceDataPreprocessorIT {
 
     @After
     public void shutdown() throws IOException {
-        for (File file : this.tmpShapeDir.toFile().listFiles()) {
-            file.delete();
-        }
-        Files.delete(this.tmpShapeDir);
+        FileUtils.deleteDirectory(this.tmpShapeDir.toFile());
     }
 
 }
