@@ -56,6 +56,18 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     private String outputFilenamesSuffix;
 
     /**
+     * Instantiates a preprocessor for vector reference data.
+     *
+     * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not
+     * set
+     */
+    public ReferenceDataPreprocessor(String targetEpsg) {
+        this.targetEpsg = targetEpsg;
+    }
+
+    /**
+     * Instantiates a preprocessor for vector reference data.
+     *
      * @param sourceEpsg set srs for origin SimpleFeatureCollection
      * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not
      * set
@@ -65,13 +77,18 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
         this.targetEpsg = targetEpsg;
     }
 
+    /**
+     * Instantiates a preprocessor for vector reference data.
+     *
+     * @param sourceEpsg set srs for origin SimpleFeatureCollection
+     * @param targetEpsg set srs for resulting shapefile, assumes WGS84 if not
+     * set
+     * @param outputFilenamesSuffix the suffix for the resulting shape file name
+     */
     public ReferenceDataPreprocessor(String sourceEpsg, String targetEpsg, String outputFilenamesSuffix) {
         this.sourceEpsg = sourceEpsg;
         this.targetEpsg = targetEpsg;
         this.outputFilenamesSuffix = outputFilenamesSuffix;
-    }
-
-    public ReferenceDataPreprocessor() {
     }
 
     public String getTargetEpsg() {
@@ -115,10 +132,11 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
 
         CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
-        if (!sourceEpsg.equals(targetEpsg)) {
-            //reproject inputCollection
-            CoordinateReferenceSystem sourceCrs = decodeCRS(sourceEpsg);
 
+        if (sourceEpsg != null && !sourceEpsg.equals(targetEpsg)) {
+            CoordinateReferenceSystem sourceCrs = decodeCRS(sourceEpsg);
+            inputCollection = new ReprojectingFeatureCollection(inputCollection, sourceCrs, targetCrs);
+        } else {
             inputCollection = new ReprojectingFeatureCollection(inputCollection, targetCrs);
         }
 
