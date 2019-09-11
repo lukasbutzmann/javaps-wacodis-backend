@@ -31,18 +31,7 @@ public abstract class InputDataOperator<T> {
      * @return The processed input data.
      * @throws WacodisProcessingException
      */
-    public abstract T process(T input, Map parameters) throws WacodisProcessingException;
-
-    /**
-     * Selects those additional parameters from a parameter {@link Map} that are
-     * required for processing the input data.
-     *
-     * @param parameters {@link Map} of parameters that contains different
-     * processing parameters.
-     * @return A subset of the passed parameters that contains only the required
-     * parameters for this processor.
-     */
-    public abstract Map getProcessingParameters(Map parameters) throws WacodisProcessingException;
+    public abstract T process(T input) throws WacodisProcessingException;
 
     /**
      * Gets the class name that is supported for processing.

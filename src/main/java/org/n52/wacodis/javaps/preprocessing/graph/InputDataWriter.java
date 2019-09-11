@@ -5,6 +5,7 @@
  */
 package org.n52.wacodis.javaps.preprocessing.graph;
 
+import java.io.File;
 import java.util.Map;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 
@@ -14,44 +15,36 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
-public interface InputDataWriter<T> {
+public abstract class InputDataWriter<T> {
+
+    private final String targetDirectory;
+
+    /**
+     * Instantiates a new writer for input data that stores the data to the
+     * specified target directory.
+     *
+     * @param targetDirectory The directory to which the input data will be
+     * written.
+     */
+    public InputDataWriter(String targetDirectory) {
+        this.targetDirectory = targetDirectory;
+    }
 
     /**
      * Get the unique name for this writer.
      *
      * @return The writer's unique name
      */
-    public String getWriterName();
+    public abstract String getWriterName();
 
     /**
      * Writes the input to a specified target directory.
      *
      * @param input The input to write out.
-     * @param targetDirectory Directory where the input will be stored.
-     * @param parameters
+     * @return {@link File} that contains the preprocessed input data.
      * @throws WacodisProcessingException
      */
-    public abstract void write(T input, String targetDirectory, Map parameters) throws WacodisProcessingException;
-
-    /**
-     * Selects those additional parameters from a parameter {@link Map} that are
-     * required for writing out the input data.
-     *
-     * @param parameters {@link Map} of parameters that contains different
-     * processing parameters.
-     * @return A subset of the passed parameters that contains only the required
-     * parameters for this writer.
-     */
-    public abstract Map getAdditionalWritingParameters(Map parameters);
-
-    /**
-     * Selects the target directory from a {@link Ma} of various paramaters.
-     *
-     * @param parameters {@link Map} of parameters that contains different
-     * processing parameters.
-     * @return The target directory to use for writing out the input data
-     */
-    public abstract String getTargetDirecetory(Map parameters);
+    public abstract File write(T input) throws WacodisProcessingException;
 
     /**
      * Gets the class name that is supported for writing out input data.

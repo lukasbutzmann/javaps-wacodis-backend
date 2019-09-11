@@ -31,17 +31,15 @@ public abstract class AbstractAlgorithm {
 
     @Autowired
     private ToolConfigParser toolConfigParser;
-    
+
     @Autowired
     private EoToolExecutor eoToolExecutor;
 
     private String namingSuffix;
 
-
-    public void executeProcess() throws WacodisProcessingException {
+    public void executeProcess(Map<String, AbstractCommandValue> inputArgumentValues) throws WacodisProcessingException {
 
         this.namingSuffix = "_" + System.currentTimeMillis();
-        Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues();
 
         ToolConfig toolConfig;
         try {

@@ -5,6 +5,7 @@
  */
 package org.n52.wacodis.javaps.preprocessing.graph;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -47,17 +48,15 @@ public class PreprocessingExecutor<T> {
      * certain processing parameters.
      *
      * @param input The input that will be processed by the operators.
-     * @param parameters Paramters that will be used for executing the
-     * operators.
+     * @return {@link File} that contains the preprocessed input data.
      * @throws WacodisProcessingException
      */
-    public void executeOperators(T input, Map parameters) throws WacodisProcessingException {
+    public File executeOperators(T input) throws WacodisProcessingException {
         T preprocessedInput = input;
         for (InputDataOperator<T> op : this.operatorList) {
-            preprocessedInput = op.process(input, op.getProcessingParameters(parameters));
+            preprocessedInput = op.process(input);
         }
-        this.writer.write(preprocessedInput, this.writer.getTargetDirecetory(parameters),
-                this.writer.getAdditionalWritingParameters(parameters));
+        return this.writer.write(preprocessedInput);
     }
 
 }

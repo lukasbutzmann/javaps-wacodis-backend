@@ -10,6 +10,7 @@ import org.esa.snap.core.gpf.main.GPT;
 import org.springframework.stereotype.Component;
 
 /**
+ * Executor for GPF graphs
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
