@@ -8,8 +8,9 @@ package org.n52.wacodis.javaps.preprocessing.graph;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Executor for several combined input data operators.
@@ -17,6 +18,8 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 public class PreprocessingExecutor<T> {
+    
+    private static final Logger LOG = LoggerFactory.getLogger(PreprocessingExecutor.class);
 
     private InputDataWriter<T> writer;
     private List<InputDataOperator<T>> operatorList;
@@ -54,8 +57,10 @@ public class PreprocessingExecutor<T> {
     public File executeOperators(T input) throws WacodisProcessingException {
         T preprocessedInput = input;
         for (InputDataOperator<T> op : this.operatorList) {
+            LOG.info("Executing operator: {}.", op.getName());
             preprocessedInput = op.process(input);
         }
+        LOG.info("Executing writer: {}.", writer.getWriterName());
         return this.writer.write(preprocessedInput);
     }
 
