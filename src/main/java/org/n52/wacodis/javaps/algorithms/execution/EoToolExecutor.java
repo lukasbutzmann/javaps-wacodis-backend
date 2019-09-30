@@ -8,6 +8,7 @@ package org.n52.wacodis.javaps.algorithms.execution;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
+import org.n52.wacodis.javaps.WacodisConfigurationException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.CommandParameter;
 import org.n52.wacodis.javaps.command.MultipleCommandValue;
@@ -40,19 +41,19 @@ public class EoToolExecutor {
     private WacodisBackendConfig config;
 
     /**
-     * excecute tool as docker container synchronously
+     * Excecute tool as docker container synchronously
      *
-     * @param input
+     * @param input {@link Map<K,V>] that holds input tool argument values as {@link AbstractCommandValue}
      * @param config defines docker image and run command parameters
      * @return
      * @throws InterruptedException
      */
-    public ProcessResult executeTool(Map<String, AbstractCommandValue> input, ToolConfig config) throws InterruptedException {
+    public ProcessResult executeTool(Map<String, AbstractCommandValue> input, ToolConfig config) throws InterruptedException, WacodisConfigurationException {
         DockerConfig dockerConfig = config.getDocker();
         CommandConfig cmdConfig = config.getCommand();
 
         DockerController dockerController = initDockerController(dockerConfig);
-        DockerRunCommandConfiguration dockerRunConfig = initRunConfiguration(cmdConfig, input);
+        DockerRunCommandConfiguration dockerRunConfig = this.initRunConfiguration(cmdConfig, input);
         dockerRunConfig.addVolumeBinding(concatVolumeBinding(this.config.getWorkingDirectory(), dockerConfig.getWorkDir()));
 
         DockerContainer dockerContainer = new DockerContainer(dockerConfig.getContainer(), dockerConfig.getImage());  //TODO use prefix in container name
@@ -65,14 +66,19 @@ public class EoToolExecutor {
         return processResult;
     }
 
-    private DockerController initDockerController(DockerConfig dockerConfig) {
-        DefaultDockerClientConfig hostConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
-                .withDockerHost(dockerConfig.getHost()).build();
-
-        return new DockerController(hostConfig);
-    }
-
-    private DockerRunCommandConfiguration initRunConfiguration(CommandConfig cmdConfig, Map<String, AbstractCommandValue> input) {
+    /**
+     * Initializes a {@link DockerRunCommandConfiguration} from a
+     * {@link CommandConfig} and a corresponding {@link Map<K,V>} with
+     * {@link AbstractCommandValue} values.
+     *
+     * @param cmdConfig {@link CommandConfig} that holds tool command arguments.
+     * @param input {@link Map<K,V>} that holds appropriate tool command
+     * argument {@link AbstractCommandValue} values
+     * @return {@link DockerRunCommandConfiguration}
+     * @throws WacodisConfigurationException either if an argument type is not
+     * valid or an input value is not available.
+     */
+    public DockerRunCommandConfiguration initRunConfiguration(CommandConfig cmdConfig, Map<String, AbstractCommandValue> input) throws WacodisConfigurationException {
         DockerRunCommandConfiguration runConfig = new DockerRunCommandConfiguration();
 
         runConfig.addCommandParameter(new CommandParameter("", cmdConfig.getFolder()));
@@ -81,8 +87,11 @@ public class EoToolExecutor {
         //TODO different handling of different command parameter types
         //TODO strategy for output naming
         //set cmd parameters
-        cmdConfig.getArguments().forEach(cmdArgument -> {
+        for (ArgumentConfig cmdArgument : cmdConfig.getArguments()) {
             if (cmdArgument.getType().equals(ArgumentConfig.TypeValues.WPS_PROCESS_REFERENCE.getName())) {
+                if (!input.containsKey(cmdArgument.getValue())) {
+                    throw new WacodisConfigurationException("No input value is available for argument: " + cmdArgument.getValue());
+                }
                 if (cmdArgument.getQuantity().equals(ArgumentConfig.QuantityValues.MULTIPLE.getName())) {
                     MultipleCommandValue value = (MultipleCommandValue) input.get(cmdArgument.getValue());
                     String valueString = StringUtils.join(value.getCommandValue(), ",");
@@ -93,12 +102,20 @@ public class EoToolExecutor {
 
                     runConfig.addCommandParameter(new CommandParameter(cmdArgument.getName(), value.getCommandValue()));
                 }
-            } else {
+            } else if (cmdArgument.getType().equals(ArgumentConfig.TypeValues.STATIC_OPTION.getName())) {
                 runConfig.addCommandParameter(new CommandParameter(cmdArgument.getName(), cmdArgument.getValue()));
+            } else {
+                throw new WacodisConfigurationException("No valid EO tool argument type: + cmdArgument.getType()");
             }
-        });
-
+        }
         return runConfig;
+    }
+
+    private DockerController initDockerController(DockerConfig dockerConfig) {
+        DefaultDockerClientConfig hostConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
+                .withDockerHost(dockerConfig.getHost()).build();
+
+        return new DockerController(hostConfig);
     }
 
     private String concatVolumeBinding(String hostFolder, String containerFolder) {
