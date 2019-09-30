@@ -13,6 +13,10 @@ public abstract class AbstractCommandValue<T> {
 
     private T commandValue;
 
+    public AbstractCommandValue(T commandValue) {
+        this.commandValue = commandValue;
+    }
+
     public T getCommandValue() {
         return commandValue;
     }

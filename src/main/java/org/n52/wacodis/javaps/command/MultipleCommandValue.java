@@ -13,4 +13,8 @@ import java.util.List;
  */
 public class MultipleCommandValue extends AbstractCommandValue<List<String>> {
 
+    public MultipleCommandValue(List<String> commandValue) {
+        super(commandValue);
+    }
+
 }

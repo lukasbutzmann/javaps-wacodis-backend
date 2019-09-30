@@ -200,8 +200,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
         }
         List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
 
-        MultipleCommandValue value = new MultipleCommandValue();
-        value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
+        MultipleCommandValue value = new MultipleCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
         return value;
 
     }
@@ -211,16 +210,14 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
         List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
 
-        SingleCommandValue value = new SingleCommandValue();
-        value.setCommandValue(preprocessedReferenceData.get(0).getName());
+        SingleCommandValue value = new SingleCommandValue(preprocessedReferenceData.get(0).getName());
         return value;
     }
 
     private AbstractCommandValue getResultPath() {
         this.productName = this.getResultNamePrefix() + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
 
-        SingleCommandValue value = new SingleCommandValue();
-        value.setCommandValue(this.productName);
+        SingleCommandValue value = new SingleCommandValue(this.productName);
         return value;
     }
 
