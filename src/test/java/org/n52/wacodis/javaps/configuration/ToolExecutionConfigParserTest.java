@@ -20,11 +20,11 @@ public class ToolExecutionConfigParserTest {
     @Test
     public void testConfigParsing() throws IOException {
         ToolConfigParser parser = new ToolConfigParser();
-        ToolConfig config = parser.parse(ClassLoader.getSystemResourceAsStream("land-cover-classification.yml"));
+        ToolConfig config = parser.parse(ClassLoader.getSystemResourceAsStream("land-cover-classification-test.yml"));
 
         Assert.assertEquals("land-cover-classification", config.getId());
         
-        Assert.assertEquals("tcp://localhost:2375", config.getDocker().getHost());
+        Assert.assertEquals("unix:///var/run/docker.sock", config.getDocker().getHost());
         Assert.assertEquals("dlm_docker:wacodis-eo-hackathon", config.getDocker().getImage());
         Assert.assertEquals("wacodis-eo-dlm", config.getDocker().getContainer());
         Assert.assertEquals("/public", config.getDocker().getWorkDir());
