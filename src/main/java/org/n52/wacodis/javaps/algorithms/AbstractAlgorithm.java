@@ -6,6 +6,8 @@
 package org.n52.wacodis.javaps.algorithms;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 import java.util.Map;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor;
@@ -31,12 +33,11 @@ public abstract class AbstractAlgorithm {
 
     @Autowired
     private ToolConfigParser toolConfigParser;
-    
+
     @Autowired
     private EoToolExecutor eoToolExecutor;
 
     private String namingSuffix;
-
 
     public void executeProcess() throws WacodisProcessingException {
 
@@ -78,11 +79,29 @@ public abstract class AbstractAlgorithm {
         return namingSuffix;
     }
 
-    private String getToolConfigPath() {
-        return this.config.getToolConfigDirectory() + "/" + this.getToolConfigName();
+    public String getToolConfigPath() {
+        String rawPath = this.config.getToolConfigDirectory() + "/" + this.getToolConfigName();
+        URL url = this.getClass().getResource(rawPath);
+        if (url != null) {
+            return url.getPath();
+        } else {
+            return rawPath;
+        }
+    }
+
+    public String getGpfConfigPath() {
+        String rawPath = this.config.getGpfDir() + "/" + this.getGpfConfigName();
+        URL url = this.getClass().getResource(rawPath);
+        if (url != null) {
+            return url.getPath();
+        } else {
+            return rawPath;
+        }
     }
 
     public abstract String getToolConfigName();
+
+    public abstract String getGpfConfigName();
 
     public abstract String getResultNamePrefix();
 
