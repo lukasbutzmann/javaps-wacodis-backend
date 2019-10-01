@@ -7,12 +7,12 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.apache.commons.io.FilenameUtils;
+import java.util.stream.Collectors;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -28,14 +28,12 @@ import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.MultipleCommandValue;
 import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
-import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
-import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
@@ -70,7 +68,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private WacodisBackendConfig config;
 
     private String opticalImagesSourceType;
-    private String opticalImagesSource;
+    private List<String> opticalImagesSources;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
@@ -95,9 +93,9 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 1)
-    public void setOpticalImagesSources(String value) {
-        this.opticalImagesSource = value;
+            maxOccurs = 6)
+    public void setOpticalImagesSources(List<String> value) {
+        this.opticalImagesSources = value;
     }
 
     @LiteralInput(
@@ -182,25 +180,31 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-        HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("epsg", this.config.getEpsg());
-        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+//        HashMap<String, String> parameters = new HashMap<String, String>();
+//        parameters.put("epsg", this.config.getEpsg());
+//        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(this.getGpfConfigPath(), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
-        try {
-            // Download satellite data
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    this.opticalImagesSource,
-                    this.config.getWorkingDirectory());
-            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-
-        } catch (IOException ex) {
-            String message = "Error while retrieving Sentinel file";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
+        List<File> sentinelFiles = new ArrayList();
+        this.opticalImagesSources.forEach(ois -> {
+            try {
+                // Download satellite data
+                File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                        ois,
+                        this.config.getWorkingDirectory());
+                this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+            } catch (IOException ex) {
+                LOGGER.debug("Error while retrieving Sentinel file: {}", ois, ex);
+            }
+        });
+        if (sentinelFiles.isEmpty()) {
+            throw new WacodisProcessingException("No Sentinel file available for processing.");
         }
-        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
 
-        MultipleCommandValue value = new MultipleCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
+//        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
+        MultipleCommandValue value = new MultipleCommandValue(
+                sentinelFiles.stream()
+                        .map(sF -> sF.getPath())
+                        .collect(Collectors.toList()));
         return value;
 
     }
@@ -219,6 +223,11 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
         SingleCommandValue value = new SingleCommandValue(this.productName);
         return value;
+    }
+
+    @Override
+    public String getGpfConfigName() {
+        return GPF_FILE;
     }
 
 }
