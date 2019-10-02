@@ -34,6 +34,7 @@ import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
+import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
@@ -172,7 +173,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
         inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
         inputArgumentValues.put("RESULT_PATH", this.getResultPath());
 
@@ -182,7 +183,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
 //        HashMap<String, String> parameters = new HashMap<String, String>();
 //        parameters.put("epsg", this.config.getEpsg());
-//        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(this.getGpfConfigPath(), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+//        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
         List<File> sentinelFiles = new ArrayList();
         this.opticalImagesSources.forEach(ois -> {
@@ -191,6 +192,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                 File sentinelFile = sentinelDownloader.downloadSentinelFile(
                         ois,
                         this.config.getWorkingDirectory());
+                sentinelFiles.add(sentinelFile);
                 this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
             } catch (IOException ex) {
                 LOGGER.debug("Error while retrieving Sentinel file: {}", ois, ex);
@@ -219,7 +221,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue getResultPath() {
-        this.productName = this.getResultNamePrefix() + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
+        this.productName = this.getResultNamePrefix() + "_" + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
 
         SingleCommandValue value = new SingleCommandValue(this.productName);
         return value;
