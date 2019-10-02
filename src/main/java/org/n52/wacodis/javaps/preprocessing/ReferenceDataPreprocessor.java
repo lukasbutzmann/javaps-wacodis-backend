@@ -47,7 +47,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataPreprocessor.class);
 
-    private static final String OUTPUT_FILENAME_PREFIX = "wacodis_traindata_";
+    private static final String OUTPUT_FILENAME_PREFIX = "wacodis_traindata";
     private static final String LANDCOVERCLASS_ATTRIBUTE = "class";
     private static final String[] SHAPEFILE_EXTENSIONS = new String[]{"shp", "shx", "dbf", "prj", "fix"};
 

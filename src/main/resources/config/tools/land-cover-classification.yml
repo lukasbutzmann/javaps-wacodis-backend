@@ -10,7 +10,7 @@ command:
     arguments:
         - name: -input
           type: wps-process-reference
-          value: OPTICAL_IMAGES_SOURCES
+          value: RAW_OPTICAL_IMAGES_SOURCES
           quantity: multiple
         - name: -training
           type: wps-process-reference
