@@ -24,7 +24,6 @@ public class ReprojectingOperatorTest {
     
     private static final String REFERENCE_DATA_FILE_NAME = "test-reference-data.json";
     private static final String TARGET_EPSG_CODE = "EPSG:4326";
-    private static final String TMP_SHAPE_DIR_PREFIX = "tmp-ref-dir";
 
     private SimpleFeatureCollection featureCollection;
     private ReprojectingOperator operator;

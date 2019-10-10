@@ -12,7 +12,6 @@ import java.io.Serializable;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import org.geotools.data.DataStore;
 import org.geotools.data.DefaultTransaction;
 import org.geotools.data.FileDataStoreFactorySpi;
@@ -23,8 +22,8 @@ import org.geotools.data.simple.SimpleFeatureStore;
 
 import org.n52.wacodis.javaps.WacodisProcessingException;
 
-
 /**
+ * Writes out a {@link SimpleFeatureCollection} as a Shape file
  *
  * @author LukasButzmann
  */
@@ -60,7 +59,6 @@ public class ShapeWriter extends InputDataWriter<SimpleFeatureCollection> {
             dataStore.createSchema(inputCollection.getSchema());
 
             writeFeaturesToDataStore(dataStore, inputCollection); //write features to shapefile
-
 
             return super.getTargetFile();
         } catch (IOException ex) {

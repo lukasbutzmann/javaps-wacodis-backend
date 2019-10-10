@@ -6,7 +6,6 @@
 package org.n52.wacodis.javaps.preprocessing.graph;
 
 import java.io.File;
-import java.util.Map;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 
 /**

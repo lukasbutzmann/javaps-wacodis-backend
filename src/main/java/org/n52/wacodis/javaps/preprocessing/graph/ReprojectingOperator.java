@@ -12,17 +12,19 @@ import static org.n52.wacodis.javaps.utils.GeometryUtils.decodeCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
+ * Reprojects a {@link SimpleFeatureCollection} into a target CRS specified by a
+ * certain EPSG code
  *
  * @author LukasButzmann
  */
-public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollection>{
+public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollection> {
 
     private CoordinateReferenceSystem targetCrs;
 
     public ReprojectingOperator(String targetEpsg) {
         this.targetCrs = decodeCRS(targetEpsg);
     }
-    
+
     @Override
     public String getName() {
         return "org.wacodis.operator.ReprojectingOperator";
@@ -30,10 +32,10 @@ public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollect
 
     @Override
     public SimpleFeatureCollection process(SimpleFeatureCollection input) throws WacodisProcessingException {
-        
+
         SimpleFeatureCollection output;
         CoordinateReferenceSystem sourceCrs = input.getSchema().getCoordinateReferenceSystem();
-        
+
         if (sourceCrs != null && !sourceCrs.equals(targetCrs)) {
             output = new ReprojectingFeatureCollection(input, sourceCrs, targetCrs);
         } else {
@@ -46,6 +48,5 @@ public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollect
     public String getSupportedClassName() {
         return SimpleFeatureCollection.class.getName();
     }
-    
-    
+
 }
