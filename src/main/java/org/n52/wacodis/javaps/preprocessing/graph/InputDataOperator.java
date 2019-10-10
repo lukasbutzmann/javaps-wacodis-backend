@@ -5,7 +5,6 @@
  */
 package org.n52.wacodis.javaps.preprocessing.graph;
 
-import java.util.Map;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 
 /**
@@ -27,7 +26,6 @@ public abstract class InputDataOperator<T> {
      * Processes certain input data.
      *
      * @param input the input data to process.
-     * @param parameters {@link Map} of processing parameters.
      * @return The processed input data.
      * @throws WacodisProcessingException
      */

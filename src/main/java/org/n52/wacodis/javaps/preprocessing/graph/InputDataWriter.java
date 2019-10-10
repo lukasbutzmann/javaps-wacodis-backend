@@ -17,17 +17,17 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
  */
 public abstract class InputDataWriter<T> {
 
-    private final String targetDirectory;
+    private final File targetFile;
 
     /**
      * Instantiates a new writer for input data that stores the data to the
      * specified target directory.
      *
-     * @param targetDirectory The directory to which the input data will be
+     * @param targetFile The File to which the input data will be
      * written.
      */
-    public InputDataWriter(String targetDirectory) {
-        this.targetDirectory = targetDirectory;
+    public InputDataWriter(File targetFile) {
+        this.targetFile = targetFile;
     }
 
     /**
@@ -52,5 +52,13 @@ public abstract class InputDataWriter<T> {
      * @return Class name that is supported for writing out input data.
      */
     public abstract String getSupportedClassName();
+    
+    /**
+     * @return The File to which the input data will be
+     * written.
+     */
+    public File getTargetFile() {
+        return targetFile;
+    }
 
 }
