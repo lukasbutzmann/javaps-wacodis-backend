@@ -9,10 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
 import org.geotools.data.DataStore;
 import org.geotools.data.DataStoreFinder;
 import org.geotools.data.FeatureSource;
@@ -37,7 +35,6 @@ public class ShapeWriterTest {
 
     private SimpleFeatureCollection featureCollection;
     private ShapeWriter shapeWriter;
-    private Path tmpShapeDir;
     private File tempTargetFile;
     
     @Before
@@ -45,7 +42,7 @@ public class ShapeWriterTest {
         InputStream input = this.getClass().getClassLoader().getResourceAsStream(REFERENCE_DATA_FILE_NAME);
         this.featureCollection = (SimpleFeatureCollection) new FeatureJSON().readFeatureCollection(input);
         
-        File tempTargetFile = File.createTempFile("testFile", ".shp");
+        this.tempTargetFile = File.createTempFile("testFile", ".shp");
         this.shapeWriter = new ShapeWriter(tempTargetFile);
     }
 
@@ -72,7 +69,6 @@ public class ShapeWriterTest {
     
     @After
     public void shutdown() throws IOException {
-        FileUtils.deleteDirectory(this.tmpShapeDir.toFile());
         tempTargetFile.deleteOnExit();
     }
 }
