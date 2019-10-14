@@ -28,7 +28,6 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.MultipleCommandValue;
 import org.n52.wacodis.javaps.command.SingleCommandValue;
-import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -66,16 +65,12 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    @Autowired
-    private WacodisBackendConfig config;
-
     private String opticalImagesSourceType;
     private List<String> opticalImagesSources;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
     private List<Product> sentinelProductList;
-    private String productName;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -148,18 +143,6 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
         this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
     }
 
-    private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
-        try {
-            return new GenericFileData(new File(this.config.getWorkingDirectory(), fileName), "image/geotiff");
-        } catch (IOException ex) {
-            throw new WacodisProcessingException("Error while creating generic file data.", ex);
-        }
-    }
-
-    public String getProductName() {
-        return productName;
-    }
-
     @Override
     public String getToolConfigName() {
         return TOOL_CONFIG;
@@ -168,6 +151,11 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     @Override
     public String getResultNamePrefix() {
         return RESULTNAMEPREFIX;
+    }
+
+    @Override
+    public String getGpfConfigName() {
+        return GPF_FILE;
     }
 
     @Override
@@ -183,8 +171,8 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("epsg", this.config.getEpsg());
-        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+        parameters.put("epsg", this.getBackendConfig().getEpsg());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.getBackendConfig().getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
         this.sentinelProductList = new ArrayList();
         List<File> preprocessedImages = new ArrayList();
@@ -193,11 +181,11 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                 // Download satellite data
                 File sentinelFile = sentinelDownloader.downloadSentinelFile(
                         ois,
-                        this.config.getWorkingDirectory());
+                        this.getBackendConfig().getWorkingDirectory());
                 Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
                 this.sentinelProductList.add(sentinelProduct);
                 preprocessedImages.addAll(
-                        imagePreprocessor.preprocess(sentinelProduct, this.config.getWorkingDirectory()));
+                        imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory()));
             } catch (IOException ex) {
                 LOGGER.debug("Error while retrieving Sentinel file: {}", ois, ex);
             } catch (WacodisProcessingException ex) {
@@ -217,24 +205,11 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.config.getEpsg(), this.getNamingSuffix());
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.getBackendConfig().getEpsg(), this.getNamingSuffix());
 
-        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
+        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.getBackendConfig().getWorkingDirectory());
 
         SingleCommandValue value = new SingleCommandValue(preprocessedReferenceData.get(0).getName());
         return value;
     }
-
-    private AbstractCommandValue getResultPath() {
-        this.productName = this.getResultNamePrefix() + "_" + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
-
-        SingleCommandValue value = new SingleCommandValue(this.productName);
-        return value;
-    }
-
-    @Override
-    public String getGpfConfigName() {
-        return GPF_FILE;
-    }
-
 }

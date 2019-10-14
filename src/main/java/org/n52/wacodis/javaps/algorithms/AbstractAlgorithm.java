@@ -5,12 +5,16 @@
  */
 package org.n52.wacodis.javaps.algorithms;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
+import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.ProcessResult;
+import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.configuration.tools.ToolConfig;
 import org.n52.wacodis.javaps.configuration.tools.ToolConfigParser;
@@ -26,6 +30,8 @@ public abstract class AbstractAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
+    private static final String TIFF_EXTENSION = ".tif";
+
     @Autowired
     private WacodisBackendConfig config;
 
@@ -36,6 +42,8 @@ public abstract class AbstractAlgorithm {
     private EoToolExecutor eoToolExecutor;
 
     private String namingSuffix;
+
+    private String productName;
 
     public void executeProcess() throws WacodisProcessingException {
 
@@ -75,6 +83,29 @@ public abstract class AbstractAlgorithm {
 
     public String getNamingSuffix() {
         return namingSuffix;
+    }
+
+    public WacodisBackendConfig getBackendConfig() {
+        return this.config;
+    }
+
+    public GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
+        try {
+            return new GenericFileData(new File(this.config.getWorkingDirectory(), fileName), "image/geotiff");
+        } catch (IOException ex) {
+            throw new WacodisProcessingException("Error while creating generic file data.", ex);
+        }
+    }
+
+    public AbstractCommandValue getResultPath() {
+        this.productName = this.getResultNamePrefix() + "_" + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
+
+        SingleCommandValue value = new SingleCommandValue(this.productName);
+        return value;
+    }
+
+    public String getProductName() {
+        return productName;
     }
 
     private String getToolConfigPath() {
