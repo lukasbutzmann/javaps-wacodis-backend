@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -73,7 +74,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
-    private Product sentinelProduct;
+    private List<Product> sentinelProductList;
     private String productName;
 
     @LiteralInput(
@@ -144,7 +145,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
         this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
+        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
     }
 
     private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
@@ -173,7 +174,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
         inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
         inputArgumentValues.put("RESULT_PATH", this.getResultPath());
 
@@ -181,30 +182,34 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-//        HashMap<String, String> parameters = new HashMap<String, String>();
-//        parameters.put("epsg", this.config.getEpsg());
-//        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put("epsg", this.config.getEpsg());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
-        List<File> sentinelFiles = new ArrayList();
+        this.sentinelProductList = new ArrayList();
+        List<File> preprocessedImages = new ArrayList();
         this.opticalImagesSources.forEach(ois -> {
             try {
                 // Download satellite data
                 File sentinelFile = sentinelDownloader.downloadSentinelFile(
                         ois,
                         this.config.getWorkingDirectory());
-                sentinelFiles.add(sentinelFile);
-                this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                this.sentinelProductList.add(sentinelProduct);
+                preprocessedImages.addAll(
+                        imagePreprocessor.preprocess(sentinelProduct, this.config.getWorkingDirectory()));
             } catch (IOException ex) {
                 LOGGER.debug("Error while retrieving Sentinel file: {}", ois, ex);
+            } catch (WacodisProcessingException ex) {
+                LOGGER.debug("Error while preprocessing Sentinel file: {}", ois, ex);
             }
         });
-        if (sentinelFiles.isEmpty()) {
-            throw new WacodisProcessingException("No Sentinel file available for processing.");
+        if (preprocessedImages.isEmpty()) {
+            throw new WacodisProcessingException("No preprocessed Sentinel files available.");
         }
 
-//        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
         MultipleCommandValue value = new MultipleCommandValue(
-                sentinelFiles.stream()
+                preprocessedImages.stream()
                         .map(sF -> sF.getPath())
                         .collect(Collectors.toList()));
         return value;
