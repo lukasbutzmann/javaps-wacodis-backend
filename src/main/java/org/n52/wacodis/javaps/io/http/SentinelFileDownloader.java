@@ -101,7 +101,7 @@ public class SentinelFileDownloader {
      */
     public File downloadSentinelFile(String url, String outPath, boolean unzip) throws IOException {
         if (config.getSentinelTestFile() != null && !config.getSentinelTestFile().isEmpty()) {
-            this.getSentinelTestFile(outPath, unzip);
+            return this.retrieveSentinelTestFile(outPath, unzip);
         }
         LOG.info("Downloading Sentinel product: {}", url);
         File cached = this.resolveProductFromCache(url);
