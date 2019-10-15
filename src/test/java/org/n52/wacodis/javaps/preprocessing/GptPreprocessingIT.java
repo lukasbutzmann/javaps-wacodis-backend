@@ -28,7 +28,10 @@ import org.geotools.referencing.CRS;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.n52.wacodis.javaps.WacodisConfigurationException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.configuration.OpenAccessHubConfig;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -43,9 +46,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 //@ContextConfiguration(classes = {OpenAccessHubConfig.class, SentinelFileDownloader.class, WacodisBackendConfig.class})
 public class GptPreprocessingIT {
 
-    private static final String SENTINEL_FILE_PATH = "path/to/example_sentinel2_file.SAFE";
+    private static final String SENTINEL_FILE_PATH = "C:/Users/Sebastian/Entwicklung/Projekte/HSBO/wacodis/data/S2A_MSIL1C_20160330T082542_N0201_R021_T38WNA_20160330T082810.zip";
     private static final String GPT_FILE = "test-gpt-graph.xml";
+    private static final String EPSG_PARAM = "epsg";
     private static final String TARGET_EPSG_CODE = "EPSG:4326";
+    private static final String INVALID_EPSG_CODE = "invalid";
     private static final String TIFF_EXTENSION = ".tif";
     private static final String TMP_IMAGE_DIR_PREFIX = "tmp-image-dir";
 
@@ -58,22 +63,25 @@ public class GptPreprocessingIT {
     private Product sentinelProduct;
     private InputDataPreprocessor<Product> imagePreprocessor;
     private Path tmpImageDir;
+    private String gptPath;
+
+    @Rule
+    public final ExpectedException exception = ExpectedException.none();
 
     @Before
     public void init() throws IOException {
-        String input = this.getClass().getClassLoader()
+        gptPath = this.getClass().getClassLoader()
                 .getResource(GPT_FILE).getPath();
         this.sentinelProduct = ProductIO.readProduct(SENTINEL_FILE_PATH);
-
-        HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put("epsg", TARGET_EPSG_CODE);
-        this.imagePreprocessor = new GptPreprocessor(input, parameters, TIFF_EXTENSION, "");
 
         this.tmpImageDir = Files.createTempDirectory(TMP_IMAGE_DIR_PREFIX);
     }
 
     @Test
     public void testGptPreprocessing() throws WacodisProcessingException, MalformedURLException, IOException, FactoryException {
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put(EPSG_PARAM, TARGET_EPSG_CODE);
+        this.imagePreprocessor = new GptPreprocessor(gptPath, parameters, TIFF_EXTENSION, "");
         File result = this.imagePreprocessor.preprocess(this.sentinelProduct, this.tmpImageDir.toString()).get(0);
         Product resProduct = ProductIO.readProduct(result.getPath());
 
@@ -81,6 +89,16 @@ public class GptPreprocessingIT {
         Assert.assertEquals(CRS.decode(TARGET_EPSG_CODE).toWKT(), resProduct.getSceneCRS().toWKT());
         resProduct.closeIO();
         resProduct.dispose();
+    }
+
+    @Test
+    public void testGptPreprocessingForInvalidParamezer() throws WacodisProcessingException, MalformedURLException, IOException, FactoryException {
+        HashMap<String, String> parameters = new HashMap<String, String>();
+        parameters.put(EPSG_PARAM, INVALID_EPSG_CODE);
+        this.imagePreprocessor = new GptPreprocessor(gptPath, parameters, TIFF_EXTENSION, "");
+
+        exception.expect(WacodisProcessingException.class);
+        File result = this.imagePreprocessor.preprocess(this.sentinelProduct, this.tmpImageDir.toString()).get(0);
     }
 
     @After
