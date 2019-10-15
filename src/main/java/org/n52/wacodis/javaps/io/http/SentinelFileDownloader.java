@@ -100,6 +100,9 @@ public class SentinelFileDownloader {
      * @throws IOException if internal file handling fails for some reason
      */
     public File downloadSentinelFile(String url, String outPath, boolean unzip) throws IOException {
+        if (config.getSentinelTestFile() != null && !config.getSentinelTestFile().isEmpty()) {
+            this.getSentinelTestFile(outPath, unzip);
+        }
         LOG.info("Downloading Sentinel product: {}", url);
         File cached = this.resolveProductFromCache(url);
         if (cached != null) {
@@ -188,6 +191,14 @@ public class SentinelFileDownloader {
         }
         return new File(FilenameUtils.concat(outPath,
                 FilenameUtils.getBaseName(file.getName()) + "." + SAFE_EXTENSION));
+    }
+
+    private File retrieveSentinelTestFile(String outPath, boolean unzip) throws IOException {
+        File testFile = new File(config.getSentinelTestFile());
+        if (unzip && FilenameUtils.getExtension(testFile.getName()).equals(ZIP_EXTENSION)) {
+            testFile = this.unzipFile(testFile, outPath, false);
+        }
+        return testFile;
     }
 
 }

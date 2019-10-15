@@ -31,9 +31,12 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
 
     @Value("${wacodis.javaps.gpfDir}")
     private String gpfDir;
-    
+
     @Value("${wacodis.javaps.epsg}")
     private String epsg;
+
+    @Value("${wacodis.javaps.sentinelTestFile:}")
+    private String sentinelTestFile;
 
     public String getWorkingDirectory() {
         return workingDirectory;
@@ -46,9 +49,13 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
     public String getGpfDir() {
         return gpfDir;
     }
-    
+
     public String getEpsg() {
         return epsg;
+    }
+    
+    public String getSentinelTestFile(){
+        return sentinelTestFile;
     }
 
     @Override
