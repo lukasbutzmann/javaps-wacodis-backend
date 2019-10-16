@@ -17,4 +17,11 @@ public class MultipleCommandValue extends AbstractCommandValue<List<String>> {
         super(commandValue);
     }
 
+    @Override
+    public String toString() {
+        return "MultipleCommandValue{"
+                + this.getCommandValue().toString()
+                + "}";
+    }
+
 }

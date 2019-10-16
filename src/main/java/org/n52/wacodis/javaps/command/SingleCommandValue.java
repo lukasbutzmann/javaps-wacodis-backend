@@ -15,4 +15,10 @@ public class SingleCommandValue extends AbstractCommandValue<String> {
         super(commandValue);
     }
 
+    @Override
+    public String toString() {
+        return "SingleCommandValue{"
+                + this.getCommandValue()
+                + "}";
+    }
 }
