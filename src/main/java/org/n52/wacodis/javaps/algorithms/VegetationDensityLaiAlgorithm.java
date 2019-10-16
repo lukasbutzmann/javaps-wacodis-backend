@@ -129,27 +129,26 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
+    public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
-        inputArgumentValues.put("RESULT_PATH", this.getResultPath());
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
     }
 
-    private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
+    private File preprocessOpticalImages() throws WacodisProcessingException {
         try {
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     this.opticalImagesSource,
                     this.getBackendConfig().getWorkingDirectory());
             Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
 
-            SingleCommandValue value = new SingleCommandValue(sentinelFile.getPath());
-            return value;
+            return sentinelFile;
 
         } catch (IOException ex) {
-            LOGGER.debug("Error while retrieving Sentinel file: {}", this.opticalImagesSource, ex);
+            LOGGER.debug("Error while reading Sentinel file: {}", this.opticalImagesSource, ex);
             throw new WacodisProcessingException("Could not preprocess Sentinel product", ex);
         }
     }

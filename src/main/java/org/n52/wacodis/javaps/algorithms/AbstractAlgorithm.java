@@ -7,12 +7,16 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.apache.commons.io.FilenameUtils;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
+import org.n52.wacodis.javaps.command.MultipleCommandValue;
 import org.n52.wacodis.javaps.command.ProcessResult;
 import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
@@ -48,7 +52,6 @@ public abstract class AbstractAlgorithm {
     public void executeProcess() throws WacodisProcessingException {
 
         this.namingSuffix = "_" + System.currentTimeMillis();
-        Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues();
 
         ToolConfig toolConfig;
         try {
@@ -58,6 +61,8 @@ public abstract class AbstractAlgorithm {
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
         }
+
+        Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues(toolConfig.getDocker().getWorkDir());
 
         String containerName = toolConfig.getDocker().getContainer() + this.getNamingSuffix();
 
@@ -97,10 +102,49 @@ public abstract class AbstractAlgorithm {
         }
     }
 
-    public AbstractCommandValue getResultPath() {
+    /**
+     * Creates an input argument value for the EO process result path
+     *
+     * @param basePath base path where to store the process result file
+     * @return {@link AbstractCommandValue} that encapsulates the EO process
+     * result path
+     */
+    public AbstractCommandValue getResultPath(String basePath) {
         this.productName = this.getResultNamePrefix() + "_" + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
 
-        SingleCommandValue value = new SingleCommandValue(this.productName);
+        SingleCommandValue value = new SingleCommandValue(FilenameUtils.concat(basePath, productName));
+        return value;
+    }
+
+    /**
+     * Creates input argument values from a {@link List} of input data
+     * {@link File} objects
+     *
+     * @param basePath base path where to read the input data from
+     * @param inputData input data as {@link List} of {@link File} objects
+     * @return {@link AbstractCommandValue} that encapsulates a {@link List} of
+     * input data file paths
+     * @throws WacodisProcessingException
+     */
+    public AbstractCommandValue createInputValue(String basePath, List<File> inputData) throws WacodisProcessingException {
+        MultipleCommandValue value = new MultipleCommandValue(
+                inputData.stream()
+                        .map(sF -> FilenameUtils.concat(basePath, sF.getName()))
+                        .collect(Collectors.toList()));
+        return value;
+    }
+
+    /**
+     * Creates input argument values from an input data {@link File}
+     *
+     * @param basePath base path where to read the input data from
+     * @param inputData input data as {@link File}
+     * @return {@link AbstractCommandValue} that encapsulates an input data file
+     * path
+     * @throws WacodisProcessingException
+     */
+    public AbstractCommandValue createInputValue(String basePath, File inputData) throws WacodisProcessingException {
+        SingleCommandValue value = new SingleCommandValue(FilenameUtils.concat(basePath, inputData.getName()));
         return value;
     }
 
@@ -137,5 +181,5 @@ public abstract class AbstractAlgorithm {
 
     public abstract String getResultNamePrefix();
 
-    public abstract Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException;
+    public abstract Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException;
 }

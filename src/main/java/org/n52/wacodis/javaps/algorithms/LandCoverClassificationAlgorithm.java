@@ -159,18 +159,18 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
+    public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
-        inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
-        inputArgumentValues.put("RESULT_PATH", this.getResultPath());
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("REFERENCE_DATA", this.createInputValue(basePath, this.preprocessReferenceData()));
+        inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
     }
 
-    private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-        HashMap<String, String> parameters = new HashMap<String, String>();
+    private List<File> preprocessOpticalImages() throws WacodisProcessingException {
+        HashMap<String, String> parameters = new HashMap();
         parameters.put("epsg", this.getBackendConfig().getEpsg());
         InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.getBackendConfig().getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
@@ -190,28 +190,19 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                 LOGGER.error("Error while retrieving Sentinel file: {}", ois, ex);
             } catch (WacodisProcessingException ex) {
                 LOGGER.error("Error while preprocessing Sentinel file: {}", ois, ex);
-            } catch (Exception ex) {
-                LOGGER.error("Unexpected error while preprocessing Sentinel file: {}", ois, ex);
             }
         });
         if (preprocessedImages.isEmpty()) {
             throw new WacodisProcessingException("No preprocessed Sentinel files available.");
         }
-
-        MultipleCommandValue value = new MultipleCommandValue(
-                preprocessedImages.stream()
-                        .map(sF -> sF.getPath())
-                        .collect(Collectors.toList()));
-        return value;
-
+        return preprocessedImages;
     }
 
-    private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
+    private File preprocessReferenceData() throws WacodisProcessingException {
         InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.getBackendConfig().getEpsg(), this.getNamingSuffix());
 
         List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.getBackendConfig().getWorkingDirectory());
-
-        SingleCommandValue value = new SingleCommandValue(preprocessedReferenceData.get(0).getName());
-        return value;
+        return preprocessedReferenceData.get(0);
     }
+
 }
