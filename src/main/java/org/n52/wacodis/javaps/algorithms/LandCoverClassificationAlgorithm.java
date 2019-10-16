@@ -181,7 +181,8 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                 // Download satellite data
                 File sentinelFile = sentinelDownloader.downloadSentinelFile(
                         ois,
-                        this.getBackendConfig().getWorkingDirectory());
+                        this.getBackendConfig().getWorkingDirectory(),
+                        false);
                 Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
                 this.sentinelProductList.add(sentinelProduct);
                 preprocessedImages.addAll(
