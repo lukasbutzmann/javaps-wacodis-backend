@@ -196,7 +196,7 @@ public class SentinelFileDownloader {
     private File retrieveSentinelTestFile(String outPath, boolean unzip) throws IOException {
         File testFile = new File(config.getSentinelTestFile());
         if (unzip && FilenameUtils.getExtension(testFile.getName()).equals(ZIP_EXTENSION)) {
-            testFile = this.unzipFile(testFile, outPath, false);
+            testFile = this.unzipFile(testFile, outPath, true);
         }
         return testFile;
     }
