@@ -15,12 +15,16 @@ import org.esa.snap.core.datamodel.Product;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.preprocessing.gpt.GptArguments;
 import org.n52.wacodis.javaps.preprocessing.gpt.GptExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 public class GptPreprocessor implements InputDataPreprocessor<Product> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GptPreprocessor.class);
 
     private final static String INPUT_KEY = "input";
     private final static String OUTPUT_KEY = "output";
@@ -68,6 +72,7 @@ public class GptPreprocessor implements InputDataPreprocessor<Product> {
 
     @Override
     public List<File> preprocess(Product product, String outputDirectoryPath) throws WacodisProcessingException {
+        LOGGER.info("Start GPT preprocessing for Sentinel image: {}", product.getName());
         Map<String, String> params = new HashMap();
         params.put(INPUT_KEY, product.getFileLocation().getPath());
         params.put(OUTPUT_KEY, FilenameUtils.concat(outputDirectoryPath,
@@ -83,6 +88,7 @@ public class GptPreprocessor implements InputDataPreprocessor<Product> {
         } catch (Exception ex) {
             throw new WacodisProcessingException("Error while executing GPF graph: " + arguments.getGraphFile(), ex);
         }
+        LOGGER.info("GPT preprocessing succesfully finished for Sentinel image: {}", product.getName());
         return Arrays.asList(new File(params.get(OUTPUT_KEY)));
     }
 

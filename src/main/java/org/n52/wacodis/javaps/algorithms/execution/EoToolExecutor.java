@@ -49,6 +49,11 @@ public class EoToolExecutor {
      * @throws InterruptedException
      */
     public ProcessResult executeTool(Map<String, AbstractCommandValue> input, ToolConfig config) throws InterruptedException, WacodisConfigurationException {
+        LOGGER.debug("Configure execution of EO tool: " + config.getId()
+                + "\nDocker config: " + config.getDocker()
+                + "\nCommand config: " + config.getCommand()
+                + "\nInput parameter values: " + input
+        );
         DockerConfig dockerConfig = config.getDocker();
         CommandConfig cmdConfig = config.getCommand();
 
@@ -58,7 +63,10 @@ public class EoToolExecutor {
 
         DockerContainer dockerContainer = new DockerContainer(dockerConfig.getContainer(), dockerConfig.getImage());  //TODO use prefix in container name
 
-        LOGGER.info("executing tool inside docker container " + dockerContainer.getContainerName() + ", image: " + dockerContainer.getImageName() + ", run cmd: " + runCmdAsString(dockerRunConfig));
+        LOGGER.info("executing tool inside docker container " 
+                + dockerContainer.getContainerName() 
+                + ", image: " + dockerContainer.getImageName() 
+                + ", run cmd: " + runCmdAsString(dockerRunConfig));
 
         DockerProcess toolProcess = new DockerProcess(dockerController, dockerContainer, dockerRunConfig);
         ProcessResult processResult = toolProcess.execute();

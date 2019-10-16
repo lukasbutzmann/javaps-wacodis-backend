@@ -130,7 +130,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      */
     @Override
     public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
-
+        LOGGER.info("Start reference data preprocessing for FeatureType: {}",
+                inputCollection.getSchema().getTypeName());
         CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
 
         if (sourceEpsg != null && !sourceEpsg.equals(targetEpsg)) {
@@ -175,6 +176,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             dataStore.createSchema(outputSchema);
 
             writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
+            LOGGER.info("Reference data preprocessing succesfully finished for FeatureType: {}",
+                    inputCollection.getSchema().getTypeName());
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
