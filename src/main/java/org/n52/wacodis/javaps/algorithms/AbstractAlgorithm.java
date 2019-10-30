@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class AbstractAlgorithm {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     private static final String TIFF_EXTENSION = ".tif";
 

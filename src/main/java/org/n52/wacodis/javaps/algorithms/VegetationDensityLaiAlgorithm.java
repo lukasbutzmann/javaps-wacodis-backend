@@ -7,13 +7,8 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.n52.javaps.algorithm.annotation.Algorithm;
@@ -23,18 +18,12 @@ import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
-import org.n52.wacodis.javaps.command.MultipleCommandValue;
-import org.n52.wacodis.javaps.command.SingleCommandValue;
-import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
-import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
-import org.openide.util.Exceptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -143,7 +132,7 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     this.opticalImagesSource,
                     this.getBackendConfig().getWorkingDirectory());
-            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
 
             return sentinelFile;
 
