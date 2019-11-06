@@ -72,11 +72,20 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
             identifier = "OPTICAL_IMAGES_SOURCES",
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
-            minOccurs = 2,
-            maxOccurs = 2)
-    public void setOpticalImagesSources(String value, String value2) {
+            minOccurs = 1,
+            maxOccurs = 10)
+    public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
-	this.opticalImagesSource2 = value2;
+    }
+
+    @LiteralInput(
+            identifier = "OPTICAL_IMAGES_SOURCES_2",
+            title = "Optical images sources",
+            abstrakt = "Sources for the optical images",
+            minOccurs = 1,
+            maxOccurs = 10)
+    public void setOpticalImagesSources2(String value2) {
+        this.opticalImagesSource2 = value2;
     }
 
     @ComplexOutput(
