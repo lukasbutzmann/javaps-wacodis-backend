@@ -73,7 +73,7 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 10)
+            maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
     }
@@ -83,7 +83,7 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 10)
+            maxOccurs = 1)
     public void setOpticalImagesSources2(String value2) {
         this.opticalImagesSource2 = value2;
     }
