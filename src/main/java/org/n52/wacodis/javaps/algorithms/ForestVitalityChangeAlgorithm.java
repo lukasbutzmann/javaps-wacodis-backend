@@ -7,6 +7,7 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import org.esa.snap.core.dataio.ProductIO;
@@ -109,7 +110,8 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
         this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
+        
+        this.productMetadata = metadataCreator.createProductMetadataBinding(Arrays.asList(new Product[]{this.sentinelProduct, this.sentinelProduct2}));
     }
 
     @Override
