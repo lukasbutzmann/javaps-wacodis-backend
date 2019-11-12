@@ -12,7 +12,9 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.geojson.feature.FeatureJSON;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.opengis.referencing.FactoryException;
 
@@ -30,6 +32,9 @@ public class TrainDataOperatorTest {
     private TrainDataOperator operatorWithClass;
     private TrainDataOperator operatorWithoutClass;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+    
     @Before
     public void init() throws IOException {
         InputStream inputWithClass = this.getClass().getClassLoader().getResourceAsStream(REFERENCE_DATA_FILE_NAME);
@@ -53,4 +58,11 @@ public class TrainDataOperatorTest {
         Assert.assertEquals("class", resultCollection2.getSchema().getDescriptor("class").getLocalName());
         Assert.assertFalse(resultCollection2.isEmpty());
     }
+    
+    @Test
+    public void testPreprocessingThrowsException() throws WacodisProcessingException, MalformedURLException, IOException, FactoryException {
+        thrown.expect(WacodisProcessingException.class);
+        thrown.expectMessage("The Features in InputCollection don't have the Attribute <noclass>!");
+        this.operatorWithoutClass.process(this.featureCollectionWithClassAttribute);
+    } 
 }

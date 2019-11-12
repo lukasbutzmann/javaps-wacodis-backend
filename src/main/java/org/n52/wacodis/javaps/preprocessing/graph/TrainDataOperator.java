@@ -17,10 +17,11 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
-import org.opengis.feature.type.PropertyDescriptor;
 
 /**
- *
+ * Adds column "class" to a {@link SimpleFeatureCollection} with TrainData 
+ * for LandCoverClassification, if it does not already exist
+ * 
  * @author LukasButzmann
  */
 public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection> {
@@ -96,8 +97,7 @@ public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection
                 return(input);
             }
         }else{
-            String message = "Error! The Features in InputCollection don't have the Attribute <"+attributeName+">!";
-            throw new WacodisProcessingException(message);
+            throw new WacodisProcessingException("The Features in InputCollection don't have the Attribute <"+attributeName+">!");
         }
     }
 
