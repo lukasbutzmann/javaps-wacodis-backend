@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Algorithm(
         identifier = "de.hsbo.wacodis.forest_vitality_change",
         title = "Forest Vitality Change",
-        abstrakt = "Perform a Forest Vitality Change calculation between two time frames.",
+        abstrakt = "Perform a Forest Vitality Change calculation between two times.",
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
@@ -76,7 +76,7 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
             minOccurs = 1,
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
-        this.opticalImagesSource = value;
+        this.opticalImagesSource1 = value;
     }
 
     @LiteralInput(
@@ -111,7 +111,7 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
         
-        this.productMetadata = metadataCreator.createProductMetadataBinding(Arrays.asList(new Product[]{this.sentinelProduct, this.sentinelProduct2}));
+        this.productMetadata = metadataCreator.createProductMetadataBinding(Arrays.asList(this.sentinelProduct1, this.sentinelProduct2));
     }
 
     @Override
