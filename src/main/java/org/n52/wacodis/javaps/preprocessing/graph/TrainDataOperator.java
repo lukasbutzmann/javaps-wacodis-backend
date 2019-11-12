@@ -25,17 +25,17 @@ import org.opengis.feature.type.PropertyDescriptor;
  */
 public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection> {
 
-    private String kategory;
+    private String category;
     private String attributeName;
 
     public TrainDataOperator(String attributeName) {
         this.attributeName = attributeName;
-        this.kategory = "class";
+        this.category = "class";
     }
     
-    public TrainDataOperator(String attributeName, String kategory) {
+    public TrainDataOperator(String attributeName, String category) {
         this.attributeName = attributeName;
-        this.kategory = kategory;
+        this.category = category;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection
         
         if (hasDescriptor(attributeName, input)) {
             
-            if (attributeName != kategory){
+            if (attributeName != category){
                 //NEW SCHEMA
                 SimpleFeatureType schema = input.getSchema();
                 // create new schema
@@ -58,7 +58,7 @@ public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection
                 builder.setSuperType((SimpleFeatureType) schema.getSuper());
                 builder.addAll(schema.getAttributeDescriptors());
                 // add new attribute
-                builder.add(kategory, String.class);
+                builder.add(category, String.class);
                 // build new schema
                 SimpleFeatureType nSchema = builder.buildFeatureType();
 
@@ -83,7 +83,7 @@ public class TrainDataOperator extends InputDataOperator<SimpleFeatureCollection
                     //attributeMap.put(key, attributeMap.get(key));
 
                     SimpleFeature f2 = DataUtilities.reType(nSchema, f);
-                    f2.setAttribute(kategory, attributeMap.get(key));
+                    f2.setAttribute(category, attributeMap.get(key));
                     features.add(f2);
                   }
                 } finally {
