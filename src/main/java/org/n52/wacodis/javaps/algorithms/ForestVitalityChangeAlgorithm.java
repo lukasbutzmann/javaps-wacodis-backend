@@ -36,7 +36,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Algorithm(
         identifier = "de.hsbo.wacodis.forest_vitality_change",
         title = "Forest Vitality Change",
-        abstrakt = "Perform a Forest Vitality Change calculation.",
+        abstrakt = "Perform a Forest Vitality Change calculation between two time frames.",
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
@@ -52,9 +52,9 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
     private SentinelFileDownloader sentinelDownloader;
 
     private String opticalImagesSourceType;
-    private String opticalImagesSource, opticalImagesSource2;
+    private String opticalImagesSource1, opticalImagesSource2;
     private ProductMetadata productMetadata;
-    private Product sentinelProduct, sentinelProduct2;
+    private Product sentinelProduct1, sentinelProduct2;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -70,9 +70,9 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
     }
 
     @LiteralInput(
-            identifier = "OPTICAL_IMAGES_SOURCES",
-            title = "Optical images sources",
-            abstrakt = "Sources for the optical images",
+            identifier = "OPTICAL_IMAGES_SOURCES_1",
+            title = "Optical images sources (first time frame)",
+            abstrakt = "Sources for the first (time frame) optical images",
             minOccurs = 1,
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
@@ -81,8 +81,8 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_SOURCES_2",
-            title = "Optical images sources",
-            abstrakt = "Sources for the optical images",
+            title = "Optical images sources (second time frame)",
+            abstrakt = "Sources for the second (time frame) optical images to compare with 1",
             minOccurs = 1,
             maxOccurs = 1)
     public void setOpticalImagesSources2(String value2) {
@@ -133,24 +133,24 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_1", this.createInputValue(basePath, this.preprocessOpticalImages1()));
         inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_2", this.createInputValue(basePath, this.preprocessOpticalImages2()));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
     }
 
-    private File preprocessOpticalImages() throws WacodisProcessingException {
+    private File preprocessOpticalImages1() throws WacodisProcessingException {
         try {
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    this.opticalImagesSource,
+                    this.opticalImagesSource1,
                     this.getBackendConfig().getWorkingDirectory());
-            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+            this.sentinelProduct1 = ProductIO.readProduct(sentinelFile.getPath());
 
             return sentinelFile;
 
         } catch (IOException ex) {
-            LOGGER.debug("Error while reading Sentinel file: {}", this.opticalImagesSource, ex);
+            LOGGER.debug("Error while reading Sentinel file: {}", this.opticalImagesSource1, ex);
             throw new WacodisProcessingException("Could not preprocess Sentinel product", ex);
         }
     }
