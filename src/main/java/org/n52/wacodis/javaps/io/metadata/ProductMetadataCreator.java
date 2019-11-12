@@ -5,6 +5,8 @@
  */
 package org.n52.wacodis.javaps.io.metadata;
 
+import java.util.List;
+
 /**
  *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
@@ -12,4 +14,6 @@ package org.n52.wacodis.javaps.io.metadata;
 public interface ProductMetadataCreator<T> {
 
     public ProductMetadata createProductMetadataBinding(T product);
+    
+    public ProductMetadata createProductMetadataBinding(List<T> productList);
 }

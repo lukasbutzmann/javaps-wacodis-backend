@@ -1,0 +1,22 @@
+id: forest-vitality-change
+docker:
+    host: unix:///var/run/docker.sock
+    image: dev.eftas.com:5000/eftas/de.eftas.wacodis.eo.forest-vitality-change:latest
+    container: wacodis-eo-lai
+    workDir: /public
+command:
+    folder: python
+    name: gehoelze.py
+    arguments:
+        - name: -input1
+          type: wps-process-reference
+          value: RAW_OPTICAL_IMAGES_SOURCES_1
+          quantity: single
+        - name: -input2
+          type: wps-process-reference
+          value: RAW_OPTICAL_IMAGES_SOURCES_2
+          quantity: single
+        - name: -output
+          type: wps-process-reference
+          value: RESULT_PATH
+          quantity: single

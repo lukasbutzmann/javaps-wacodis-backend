@@ -26,13 +26,41 @@ public class WacodisBackendConfig implements InitializingBean, DisposableBean {
     @Value("${wacodis.javaps.workdir}")
     private String workingDirectory;
 
+    @Value("${wacodis.javaps.toolConfigDir}")
+    private String toolConfigDirectory;
+
+    @Value("${wacodis.javaps.gpfDir}")
+    private String gpfDir;
+
+    @Value("${wacodis.javaps.epsg}")
+    private String epsg;
+
+    @Value("${wacodis.javaps.sentinelTestFile:}")
+    private String sentinelTestFile;
+
     public String getWorkingDirectory() {
         return workingDirectory;
     }
 
+    public String getToolConfigDirectory() {
+        return toolConfigDirectory;
+    }
+
+    public String getGpfDir() {
+        return gpfDir;
+    }
+
+    public String getEpsg() {
+        return epsg;
+    }
+    
+    public String getSentinelTestFile(){
+        return sentinelTestFile;
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Starts the runtime engine and installs thir-party libraries and driver
+        // Starts the runtime engine and installs third-party libraries and driver  
         this.engine = Engine.start();
         // Scans for plugins that will be registered with the IIORegistry
         ImageIO.scanForPlugins();

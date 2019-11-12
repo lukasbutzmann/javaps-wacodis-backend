@@ -7,8 +7,13 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.geotools.data.simple.SimpleFeatureCollection;
@@ -17,22 +22,22 @@ import org.n52.javaps.algorithm.annotation.ComplexInput;
 import org.n52.javaps.algorithm.annotation.ComplexOutput;
 import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
+import org.n52.javaps.gt.io.data.binding.complex.GTVectorDataBinding;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
-import org.n52.wacodis.javaps.algorithms.execution.LandCoverClassificationExecutor;
-import org.n52.wacodis.javaps.command.ProcessResult;
-import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
-import org.n52.wacodis.javaps.configuration.LandCoverClassificationConfig;
-import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
+import org.n52.wacodis.javaps.command.AbstractCommandValue;
+import org.n52.wacodis.javaps.command.MultipleCommandValue;
+import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
+import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor;
+import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,29 +53,24 @@ import org.springframework.beans.factory.annotation.Autowired;
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
-public class LandCoverClassificationAlgorithm {
+public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private static final String TIFF_EXTENSION = ".tif";
-    private static final String REFERENCEDATA_EPSG = "EPSG:32632";
     private static final String RESULTNAMEPREFIX = "land_cover_classification_result";
+    private static final String TOOL_CONFIG = "land-cover-classification.yml";
+    private static final String GPF_FILE = "S2_GeoTIFF_Composition.xml";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LandCoverClassificationAlgorithm.class);
 
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    @Autowired
-    private WacodisBackendConfig config;
-
-    @Autowired
-    private LandCoverClassificationConfig toolConfig;
-
     private String opticalImagesSourceType;
-    private String opticalImagesSource;
+    private List<String> opticalImagesSources;
     private String referenceDataType;
     private SimpleFeatureCollection referenceData;
-    private String productName;
     private ProductMetadata productMetadata;
+    private List<Product> sentinelProductList;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -82,6 +82,7 @@ public class LandCoverClassificationAlgorithm {
             allowedValues = {"Sentinel-2", "Aerial_Image"})
     public void setOpticalImagesSourceType(String value) {
         this.opticalImagesSourceType = value;
+
     }
 
     @LiteralInput(
@@ -89,9 +90,9 @@ public class LandCoverClassificationAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 1)
-    public void setOpticalImagesSources(String value) {
-        this.opticalImagesSource = value;
+            maxOccurs = 6)
+    public void setOpticalImagesSources(List<String> value) {
+        this.opticalImagesSources = value;
     }
 
     @LiteralInput(
@@ -112,7 +113,7 @@ public class LandCoverClassificationAlgorithm {
             abstrakt = "Reference data for land cover classification",
             minOccurs = 1,
             maxOccurs = 1,
-            binding = FeatureCollectionBinding.class
+            binding = GTVectorDataBinding.class
     )
     public void setReferenceData(SimpleFeatureCollection value) {
         this.referenceData = value;
@@ -123,7 +124,7 @@ public class LandCoverClassificationAlgorithm {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.productName);
+        return this.createProductOutput(this.getProductName());
     }
 
     @ComplexOutput(
@@ -136,83 +137,73 @@ public class LandCoverClassificationAlgorithm {
 
     @Execute
     public void execute() throws WacodisProcessingException {
+        this.executeProcess();
 
-        String workingDirectory = config.getWorkingDirectory();
-        String namingSuffix = "_" + System.currentTimeMillis(); //common suffix for output files and containers
-
-        List<File> imageData;
-        File refData;
-
-        //TODO preprocess training data for each input image (need to adjust wps input)
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(REFERENCEDATA_EPSG, namingSuffix); //set spatial reference system and output filename suffix, TODO: detect srs from input data
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        try {
-            List<File> referenceDataFiles = referencePreprocessor.preprocess(this.referenceData, workingDirectory);
-            refData = referenceDataFiles.get(0); //.shp
-
-            // Download satellite data
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    opticalImagesSource,
-                    workingDirectory);
-
-            InputDataPreprocessor imagePreprocessor = new Sentinel2Preprocessor(false, namingSuffix);
-
-            Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-            this.productMetadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
-            // convert sentinel images to GeoTIFF files
-            imageData = imagePreprocessor.preprocess(
-                    sentinelProduct,
-                    workingDirectory);
-        } catch (WacodisProcessingException | IOException ex) {
-            String message = "Error while preprocessing input data";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
-        }
-
-        if (imageData.isEmpty()) {
-            throw new WacodisProcessingException("No image data for processing available");
-        }
-
-        String resultFileName = RESULTNAMEPREFIX + UUID.randomUUID().toString() + namingSuffix + TIFF_EXTENSION;
-        String containerName = this.toolConfig.getDockerContainerName() + namingSuffix;
-
-        LandCoverClassificationExecutor executor
-                = new LandCoverClassificationExecutor(
-                        workingDirectory,
-                        imageData.get(0).getName(),
-                        refData.getName(),
-                        resultFileName,
-                        this.toolConfig,
-                        containerName /*docker container name*/);
-        ProcessResult result;
-        try {
-            result = executor.executeTool();
-        } catch (Exception ex) {
-            String message = "Error while executing land cover docker process";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
-        }
-        if (result.getResultCode() == 0) { //tool returns Result Code 0 if finished successfully
-            this.productName = resultFileName;
-        } else { //non-zero Result Code, error occured during tool execution
-            throw new WacodisProcessingException("landcover classification tool (container: "
-                    + containerName
-                    + " )exited with a non-zero result code, result code was "
-                    + result.getResultCode()
-                    + ", consult tool specific documentation for details");
-        }
-        LOGGER.info("landcover classification docker process finished "
-                + "executing with result code: {}", result.getResultCode());
-        LOGGER.debug(result.getOutputMessage());
-
+        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
     }
 
-    private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
-        try {
-            return new GenericFileData(new File(this.config.getWorkingDirectory(), fileName), "image/geotiff");
-        } catch (IOException ex) {
-            throw new WacodisProcessingException("Error while creating generic file data.", ex);
+    @Override
+    public String getToolConfigName() {
+        return TOOL_CONFIG;
+    }
+
+    @Override
+    public String getResultNamePrefix() {
+        return RESULTNAMEPREFIX;
+    }
+
+    @Override
+    public String getGpfConfigName() {
+        return GPF_FILE;
+    }
+
+    @Override
+    public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
+        Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
+
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("REFERENCE_DATA", this.createInputValue(basePath, this.preprocessReferenceData()));
+        inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
+
+        return inputArgumentValues;
+    }
+
+    private List<File> preprocessOpticalImages() throws WacodisProcessingException {
+        HashMap<String, String> parameters = new HashMap();
+        parameters.put("epsg", this.getBackendConfig().getEpsg());
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.getBackendConfig().getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+
+        this.sentinelProductList = new ArrayList();
+        List<File> preprocessedImages = new ArrayList();
+        this.opticalImagesSources.forEach(ois -> {
+            try {
+                // Download satellite data
+                File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                        ois,
+                        this.getBackendConfig().getWorkingDirectory(),
+                        false);
+                Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                this.sentinelProductList.add(sentinelProduct);
+                preprocessedImages.addAll(
+                        imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory()));
+            } catch (IOException ex) {
+                LOGGER.error("Error while retrieving Sentinel file: {}", ois, ex);
+            } catch (WacodisProcessingException ex) {
+                LOGGER.error("Error while preprocessing Sentinel file: {}", ois, ex);
+            }
+        });
+        if (preprocessedImages.isEmpty()) {
+            throw new WacodisProcessingException("No preprocessed Sentinel files available.");
         }
+        return preprocessedImages;
+    }
+
+    private File preprocessReferenceData() throws WacodisProcessingException {
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.getBackendConfig().getEpsg(), this.getNamingSuffix());
+
+        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.getBackendConfig().getWorkingDirectory());
+        return preprocessedReferenceData.get(0);
     }
 
 }
