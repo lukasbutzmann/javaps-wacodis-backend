@@ -101,8 +101,8 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
             abstrakt = "The type of the reference data",
             minOccurs = 1,
             maxOccurs = 1,
-            defaultValue = "VECTOR_MASK",
-            allowedValues = {"VECTOR_MASK","RASTER_MASK"})
+            defaultValue = "MASK_VECTOR_DATA",
+            allowedValues = {"MASK_VECTOR_DATA","MASK_RASTER_DATA"})
     public void setReferenceDataType(String value) {
         this.referenceDataType = value;
     }
