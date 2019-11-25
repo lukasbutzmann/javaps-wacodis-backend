@@ -27,12 +27,21 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.vividsolutions.jts.geom.Polygon;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 import org.geotools.data.DataStore;
 import org.geotools.data.FileDataStoreFactorySpi;
 import org.geotools.data.FileDataStoreFinder;
+import org.geotools.data.collection.ListFeatureCollection;
+import org.geotools.data.simple.SimpleFeatureIterator;
+import org.geotools.feature.NameImpl;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.feature.simple.SimpleFeatureTypeImpl;
+import org.geotools.feature.type.GeometryDescriptorImpl;
+import org.geotools.feature.type.GeometryTypeImpl;
 import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
@@ -163,29 +172,24 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
                 throw new WacodisProcessingException(msg);
             }
 
-            /*boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
-            if (!isInputSchemaValid) {
-                String msg = "cannot write features, input schema is invalid";
-                LOGGER.debug(msg);
-                throw new WacodisProcessingException(msg);
-            }*/
-
-            //create new shapefile datastore with schema for trainig data
+            //create new shapefile datastore for reference data
             DataStore dataStore = dataStoreFactory.createNewDataStore(params);
-            //Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
-            //SimpleFeatureType outputSchema = createReferenceDataFeatureType(targetCrs, geometryBinding); //traning data schema
-            dataStore.createSchema(inputCollection.getSchema());
+            //derive and create output schema from input schema
+            SimpleFeatureType outputSchema = constructOutputSchema(inputCollection.getSchema());
+            dataStore.createSchema(outputSchema);
 
-            writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
+            //write features
+            SimpleFeatureCollection outputCollection = transferFeaturesToOutputSchema(inputCollection, outputSchema);
+            writeFeaturesToDataStore(dataStore, outputCollection, referenceDataShapefile); //write features to shapefile
             LOGGER.info("Reference data preprocessing succesfully finished for FeatureType: {}",
-                    inputCollection.getSchema().getTypeName());      
+                    inputCollection.getSchema().getTypeName());
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
         }
     }
 
-    private void writeFeaturesToDataStore(DataStore dataStore, SimpleFeatureCollection reprojectInputCollection, File referenceDataFile) throws IOException {
+    private void writeFeaturesToDataStore(DataStore dataStore, SimpleFeatureCollection features, File referenceDataFile) throws IOException {
         Transaction transaction = new DefaultTransaction("create");
 
         String typeName = dataStore.getTypeNames()[0];
@@ -193,12 +197,13 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
         if (featureSource instanceof SimpleFeatureStore) {
             SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-
+                     
             featureStore.setTransaction(transaction);
             try {
                 LOGGER.debug("starting transaction for file " + referenceDataFile.getName());
+                
 
-                featureStore.addFeatures(reprojectInputCollection);
+                featureStore.addFeatures(features);
                 transaction.commit();
 
                 LOGGER.debug("successfully commited to file " + referenceDataFile.getName());
@@ -214,96 +219,63 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             LOGGER.error("cannot write features, unexpected feature source type " + featureSource.getClass().getSimpleName());
         }
     }
+    
+    private SimpleFeatureCollection transferFeaturesToOutputSchema(SimpleFeatureCollection inputFeatures, SimpleFeatureType outputSchema){
+        List<SimpleFeature> outputFeatures = new ArrayList<>();
+        
+        //transfer every feature from input schema to output schema
+        try (SimpleFeatureIterator featureIterator = inputFeatures.features()) {
+            while(featureIterator.hasNext()){
+                SimpleFeature inputFeature = featureIterator.next();
+                SimpleFeature outputFeature = SimpleFeatureBuilder.build(outputSchema, inputFeature.getAttributes(), "");
+                outputFeatures.add(outputFeature);
+            }
+        }
+            
+        return new ListFeatureCollection(outputSchema, outputFeatures);
+    }
 
-    /**
-     * schema must include attribute 'class' of type Integer or Long
-     *
-     * @param inputSchema
-     * @return
-     */
-    private boolean validateInputSchema(SimpleFeatureType inputSchema) {
-        AttributeDescriptor classAttribute = inputSchema.getDescriptor(LANDCOVERCLASS_ATTRIBUTE);
 
-        if (classAttribute == null) { //check if class attribute exits
-            LOGGER.warn("input schema does not contain mandatory attribute " + LANDCOVERCLASS_ATTRIBUTE);
-            return false;
-        } else { //check datatype of class attribute
-            AttributeType type = inputSchema.getType(LANDCOVERCLASS_ATTRIBUTE);
-            Class binding = type.getBinding();
-
-            if (!binding.equals(Integer.class) && !binding.equals(Long.class)) {
-                LOGGER.warn("attribute " + LANDCOVERCLASS_ATTRIBUTE + " is of type " + binding.getSimpleName() + ", expected Integer or Long");
-                return false;
+    private SimpleFeatureType constructOutputSchema(SimpleFeatureType inputSchema) {
+        List<AttributeDescriptor> outputAttributes = new ArrayList<>();
+        GeometryType geomType = null;
+        
+        //find geometry attribute, carry over all other attributes
+        for (AttributeDescriptor inputAttribute : inputSchema.getAttributeDescriptors()) {
+            AttributeType type = inputAttribute.getType();
+            if (type instanceof GeometryType && type.equals(inputSchema.getGeometryDescriptor().getType())) {
+                geomType = (GeometryType) type;
+            } else {
+                outputAttributes.add(inputAttribute);
             }
         }
 
-        return true;
+        //derive geometry type from input schema's geometry type and add to output schema attributes
+        GeometryDescriptor outputGeometryDescriptor = createGeometryDescriptor(geomType, inputSchema.getGeometryDescriptor());
+        outputAttributes.add(0, outputGeometryDescriptor); //must be the first item
+        //create derived output schema
+        SimpleFeatureType outputSchema = new SimpleFeatureTypeImpl(
+                inputSchema.getName(), outputAttributes, outputGeometryDescriptor,
+                inputSchema.isAbstract(), inputSchema.getRestrictions(),
+                inputSchema.getSuper(), inputSchema.getDescription());
+
+        return outputSchema;
     }
 
-    private Class getGeometryTypeFromSchema(SimpleFeatureType schema) {
-        GeometryDescriptor geomAttribute = schema.getGeometryDescriptor();
-        GeometryType geomType = geomAttribute.getType();
-        Class geomBinding = geomType.getBinding();
+    private GeometryDescriptor createGeometryDescriptor(GeometryType geomType, GeometryDescriptor inputGeometryDescriptor) {
+        GeometryTypeImpl gt = new GeometryTypeImpl(
+                new NameImpl("the_geom"), geomType.getBinding(), //needs to be "the_geom" for shape files
+                geomType.getCoordinateReferenceSystem(),
+                geomType.isIdentified(), geomType.isAbstract(),
+                geomType.getRestrictions(), geomType.getSuper(),
+                geomType.getDescription());
 
-        LOGGER.debug("get geometry attribute " + geomAttribute.getLocalName() + " of type " + geomBinding.getSimpleName());
-
-        if (!geomBinding.equals(Polygon.class) && !geomBinding.equals(MultiPolygon.class)) {
-            LOGGER.warn("geometry attribute " + geomAttribute.getLocalName() + " is of datatype " + geomBinding.getSimpleName() + " , expected Polygon or MultiPolygon");
-        }
-
-        return geomBinding;
-    }
-
-    /**
-     * get schema for landclassification training data
-     *
-     * @return
-     */
-    public SimpleFeatureType retrieveDefaultSchema() {
-        CoordinateReferenceSystem crs = determineCRS();
-        return createReferenceDataFeatureType(crs, null); //MultiPolygon
-    }
-
-    /**
-     * schema for landcover classification training data
-     *
-     * @param crs
-     * @param geometryBinding binding for geometry attribute, assume
-     * MultiPolygon if null
-     * @return
-     */
-    private SimpleFeatureType createReferenceDataFeatureType(CoordinateReferenceSystem crs, Class geometryBinding) {
-        if (geometryBinding == null) {
-            geometryBinding = MultiPolygon.class;
-            LOGGER.warn("geometry binding not set, assume MultiPolygon");
-        }
-
-        SimpleFeatureTypeBuilder builder = new SimpleFeatureTypeBuilder();
-        builder.setName("referencedata");
-        builder.setCRS(crs);
-
-        builder.add("the_geom", geometryBinding); //geometry attribute
-        builder.add("id", Integer.class);
-        builder.add(LANDCOVERCLASS_ATTRIBUTE, Integer.class); //landcover classification
-
-        return builder.buildFeatureType();
-    }
-
-    /**
-     * @return CoordinateReferenceSystem for this.epsg or WGS84 if this.epsg is
-     * not set or unparsable
-     */
-    private CoordinateReferenceSystem determineCRS() {
-        CoordinateReferenceSystem crs;
-
-        if (this.targetEpsg != null) {
-            crs = decodeCRS(this.targetEpsg);
-        } else {
-            LOGGER.warn("targetEpsg is not set, assume default crs WGS84");
-            crs = DefaultGeographicCRS.WGS84;
-        }
-
-        return crs;
+        GeometryDescriptor outputGeometryDescriptor = new GeometryDescriptorImpl(
+                gt, new NameImpl("the_geom"),
+                inputGeometryDescriptor.getMinOccurs(), inputGeometryDescriptor.getMaxOccurs(),
+                inputGeometryDescriptor.isNillable(), inputGeometryDescriptor.getDefaultValue());
+        
+        return outputGeometryDescriptor;
     }
 
     private CoordinateReferenceSystem decodeCRS(String epsg) {
