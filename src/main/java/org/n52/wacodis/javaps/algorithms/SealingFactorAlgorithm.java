@@ -48,7 +48,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @Algorithm(
         identifier = "de.hsbo.wacodis.sealing_factor",
-        title = "Land Cover Classification",
+        title = "Sealing Factor Calculation",
         abstrakt = "Perform a sealing factor calculation for optical images.",
         version = "0.0.1",
         storeSupported = true,
