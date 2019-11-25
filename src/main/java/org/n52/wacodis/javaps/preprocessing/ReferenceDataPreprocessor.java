@@ -37,6 +37,7 @@ import org.opengis.feature.type.AttributeDescriptor;
 import org.opengis.feature.type.AttributeType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.GeometryType;
+import org.opengis.feature.type.Name;
 import org.opengis.referencing.FactoryException;
 
 /**
@@ -162,22 +163,22 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
                 throw new WacodisProcessingException(msg);
             }
 
-            boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
+            /*boolean isInputSchemaValid = validateInputSchema(inputCollection.getSchema());
             if (!isInputSchemaValid) {
                 String msg = "cannot write features, input schema is invalid";
                 LOGGER.debug(msg);
                 throw new WacodisProcessingException(msg);
-            }
+            }*/
 
             //create new shapefile datastore with schema for trainig data
             DataStore dataStore = dataStoreFactory.createNewDataStore(params);
-            Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
-            SimpleFeatureType outputSchema = createReferenceDataFeatureType(targetCrs, geometryBinding); //traning data schema
-            dataStore.createSchema(outputSchema);
+            //Class geometryBinding = getGeometryTypeFromSchema(inputCollection.getSchema());
+            //SimpleFeatureType outputSchema = createReferenceDataFeatureType(targetCrs, geometryBinding); //traning data schema
+            dataStore.createSchema(inputCollection.getSchema());
 
             writeFeaturesToDataStore(dataStore, inputCollection, referenceDataShapefile); //write features to shapefile
             LOGGER.info("Reference data preprocessing succesfully finished for FeatureType: {}",
-                    inputCollection.getSchema().getTypeName());
+                    inputCollection.getSchema().getTypeName());      
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
