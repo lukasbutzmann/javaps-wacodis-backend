@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
@@ -23,6 +24,7 @@ import org.n52.javaps.algorithm.annotation.Execute;
 import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.gt.io.data.binding.complex.GTVectorDataBinding;
 import org.n52.javaps.io.GenericFileData;
+import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.MultipleCommandValue;
@@ -43,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 @Algorithm(
@@ -195,31 +196,31 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
         HashMap<String, String> parameters = new HashMap<String, String>();
-        
-        //GeoJSONtoWKT
-        String[] coord = this.areaOfInterest.substring(1, areaOfInterest.length()-1).split(",");
-        
-        parameters.put("epsg", this.config.getEpsg());
-        parameters.put("area","POLYGON (("+coord[0]+" "+coord[1]+","+coord[0]+" "+coord[3]+","+coord[2]+" "+coord[3]+","+coord[2]+" "+coord[1]+","+coord[0]+" "+coord[1]+"))");
-        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
-try {
+        try {
+            parameters.put("area", GeometryUtils.geoJsonBboxToWkt(areaOfInterest));
+
+            InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
+
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     this.opticalImagesSource,
                     this.config.getWorkingDirectory());
             this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-            
+
+            List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
+
+            MultipleCommandValue value = new MultipleCommandValue();
+            value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
+            return value;
+
         } catch (IOException ex) {
             String message = "Error while retrieving Sentinel file";
             LOGGER.debug(message, ex);
             throw new WacodisProcessingException(message, ex);
+        } catch (GeometryParseException ex) {
+            throw new WacodisProcessingException("Error while trying to convert area of interest to WKT", ex);
         }
-        List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
-
-        MultipleCommandValue value = new MultipleCommandValue();
-        value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
-        return value;
 
     }
 
