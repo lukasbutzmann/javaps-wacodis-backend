@@ -33,4 +33,20 @@ public class GeometryUtilsTest {
         thrown.expect(GeometryParseException.class);
         CoordinateReferenceSystem crs = GeometryUtils.decodeCRS(validEpsg);
     }
+
+    @Test
+    public void testGeoJsonBboxToWktForValidBbox() throws GeometryParseException {
+        String bBox = "[7.1234, 52.1234, 7.9876, 52.9876]";
+        String wkt = GeometryUtils.geoJsonBboxToWkt(bBox);
+
+        Assert.assertEquals("POLYGON ((7.1234 52.1234,7.1234 52.9876,7.9876 52.9876,7.9876 52.1234,7.1234 52.1234))", wkt);
+    }
+
+    @Test
+    public void testGeoJsonBboxToWktThrowsExceptionForInvalidBbox() throws GeometryParseException {
+        String bBox = "[7.1234, 52.1234, 7.9876]";
+
+        thrown.expect(GeometryParseException.class);
+        String wkt = GeometryUtils.geoJsonBboxToWkt(bBox);
+    }
 }
