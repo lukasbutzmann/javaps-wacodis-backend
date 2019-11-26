@@ -11,8 +11,8 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <javaps.version>1.4.0-SNAPSHOT</javaps.version>
         <geotools.version>20.2</geotools.version>
-        <snap.version>6.0.2</snap.version>
-        <s2tbx.version>6.0.2</s2tbx.version>
+        <snap.version>7.0.0</snap.version>
+        <s2tbx.version>7.0.0</s2tbx.version>
         <jersey.version>2.28</jersey.version>
         <docker-java.version>3.1.5</docker-java.version>
         <jax-rs.version>2.1.1</jax-rs.version>

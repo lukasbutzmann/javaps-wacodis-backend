@@ -71,6 +71,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     private String opticalImagesSourceType;
     private String opticalImagesSource;
     private String referenceDataType;
+    private String areaOfInterest;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
     private Product sentinelProduct;
@@ -109,6 +110,16 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             allowedValues = {"ATKIS", "MANUAL"})
     public void setReferenceDataType(String value) {
         this.referenceDataType = value;
+    }
+    
+    @LiteralInput(
+            identifier = "AREA_OF_INTEREST",
+            title = "Area of interest",
+            abstrakt = "Area of interest of the optical image in GeoJSON-Format e.g. [7.1234, 52.1234, 7.9876, 52.9876]. [0,0,0,0] uses the entire area of the image.",
+            minOccurs = 1,
+            maxOccurs = 1)
+    public void setAreaOfInterst(String value) {
+        this.areaOfInterest = value;
     }
 
     @ComplexInput(
@@ -184,16 +195,21 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
         HashMap<String, String> parameters = new HashMap<String, String>();
+        
+        //GeoJSONtoWKT
+        String[] coord = this.areaOfInterest.substring(1, areaOfInterest.length()-1).split(",");
+        
         parameters.put("epsg", this.config.getEpsg());
+        parameters.put("area","POLYGON (("+coord[0]+" "+coord[1]+","+coord[0]+" "+coord[3]+","+coord[2]+" "+coord[3]+","+coord[2]+" "+coord[1]+","+coord[0]+" "+coord[1]+"))");
         InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
-        try {
+try {
             // Download satellite data
             File sentinelFile = sentinelDownloader.downloadSentinelFile(
                     this.opticalImagesSource,
                     this.config.getWorkingDirectory());
             this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-
+            
         } catch (IOException ex) {
             String message = "Error while retrieving Sentinel file";
             LOGGER.debug(message, ex);
