@@ -8,6 +8,7 @@ package org.n52.wacodis.javaps.io.datahandler.parser;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.xml.parsers.ParserConfigurationException;
+
 import org.geotools.GML;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.n52.javaps.annotation.Properties;
@@ -18,13 +19,13 @@ import org.n52.javaps.io.InputHandler;
 import org.n52.shetland.ogc.wps.Format;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
+import org.opengis.referencing.FactoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.xml.sax.SAXException;
 
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 @Properties(defaultPropertyFileName = "gml.properties")
@@ -46,8 +47,9 @@ public class Gml3Parser extends AbstractPropertiesInputOutputHandler implements 
     public FeatureCollectionBinding parse(TypedProcessInputDescription<?> description, InputStream input, Format format) throws IOException, DecodingException {
 //        String gmlString = IOUtils.toString(input, "UTF-8");
         GML gml = new GML(GML.Version.GML3);
-        gml.setCoordinateReferenceSystem((geomUtils.decodeCRS(GeometryUtils.DEFAULT_INPUT_EPSG)));
+
         try {
+            gml.setCoordinateReferenceSystem((geomUtils.decodeCRS(GeometryUtils.DEFAULT_INPUT_EPSG)));
             SimpleFeatureCollection fc = gml.decodeFeatureCollection(input);
             return new FeatureCollectionBinding(fc);
         } catch (SAXException ex) {
@@ -56,6 +58,9 @@ public class Gml3Parser extends AbstractPropertiesInputOutputHandler implements 
         } catch (ParserConfigurationException ex) {
             LOG.error("Error caused by invalid parser configuration", ex);
             throw new DecodingException("Could not parse file", ex);
+        } catch (FactoryException ex) {
+            LOG.error("Could not decode epsg code " + GeometryUtils.DEFAULT_INPUT_EPSG);
+            throw new DecodingException("Error while decoding epsg code", ex);
         }
     }
 }

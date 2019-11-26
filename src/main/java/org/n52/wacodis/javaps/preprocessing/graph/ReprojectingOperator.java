@@ -8,8 +8,14 @@ package org.n52.wacodis.javaps.preprocessing.graph;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.store.ReprojectingFeatureCollection;
 import org.n52.wacodis.javaps.WacodisProcessingException;
+
 import static org.n52.wacodis.javaps.utils.GeometryUtils.decodeCRS;
+
+import org.n52.wacodis.javaps.utils.GeometryUtils;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Reprojects a {@link SimpleFeatureCollection} into a target CRS specified by a
@@ -19,10 +25,13 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
  */
 public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollection> {
 
-    private CoordinateReferenceSystem targetCrs;
+    private static final Logger LOG = LoggerFactory.getLogger(ReprojectingOperator.class);
+
+    //    private CoordinateReferenceSystem targetCrs;
+    private String targetEpsg;
 
     public ReprojectingOperator(String targetEpsg) {
-        this.targetCrs = decodeCRS(targetEpsg);
+        this.targetEpsg = targetEpsg;
     }
 
     @Override
@@ -32,6 +41,13 @@ public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollect
 
     @Override
     public SimpleFeatureCollection process(SimpleFeatureCollection input) throws WacodisProcessingException {
+        CoordinateReferenceSystem targetCrs = null;
+        try {
+            targetCrs = decodeCRS(targetEpsg);
+        } catch (FactoryException ex) {
+            LOG.error("Could not decode epsg code " + this.targetEpsg);
+            throw new WacodisProcessingException("Error while decoding epsg code", ex);
+        }
 
         SimpleFeatureCollection output;
         CoordinateReferenceSystem sourceCrs = input.getSchema().getCoordinateReferenceSystem();
