@@ -7,6 +7,7 @@ package org.n52.wacodis.javaps.preprocessing.graph;
 
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.store.ReprojectingFeatureCollection;
+import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 
 import static org.n52.wacodis.javaps.utils.GeometryUtils.decodeCRS;
@@ -44,7 +45,7 @@ public class ReprojectingOperator extends InputDataOperator<SimpleFeatureCollect
         CoordinateReferenceSystem targetCrs = null;
         try {
             targetCrs = decodeCRS(targetEpsg);
-        } catch (FactoryException ex) {
+        } catch (GeometryParseException ex) {
             LOG.error("Could not decode epsg code " + this.targetEpsg);
             throw new WacodisProcessingException("Error while decoding epsg code", ex);
         }

@@ -17,8 +17,10 @@ import org.n52.javaps.io.AbstractPropertiesInputOutputHandler;
 import org.n52.javaps.io.DecodingException;
 import org.n52.javaps.io.InputHandler;
 import org.n52.shetland.ogc.wps.Format;
+import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.io.data.binding.complex.FeatureCollectionBinding;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
+import org.opengis.geometry.Geometry;
 import org.opengis.referencing.FactoryException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,7 +60,7 @@ public class Gml3Parser extends AbstractPropertiesInputOutputHandler implements 
         } catch (ParserConfigurationException ex) {
             LOG.error("Error caused by invalid parser configuration", ex);
             throw new DecodingException("Could not parse file", ex);
-        } catch (FactoryException ex) {
+        } catch (GeometryParseException ex) {
             LOG.error("Could not decode epsg code " + GeometryUtils.DEFAULT_INPUT_EPSG);
             throw new DecodingException("Error while decoding epsg code", ex);
         }

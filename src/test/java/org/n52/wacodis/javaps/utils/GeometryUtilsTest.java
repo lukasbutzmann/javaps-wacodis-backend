@@ -5,6 +5,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -18,7 +19,7 @@ public class GeometryUtilsTest {
     public ExpectedException thrown = ExpectedException.none();
 
     @Test
-    public void testDecodeCRSForValidEpsgCode() throws FactoryException {
+    public void testDecodeCRSForValidEpsgCode() throws GeometryParseException {
         String validEpsg = "EPSG:32632";
         CoordinateReferenceSystem crs = GeometryUtils.decodeCRS(validEpsg);
 
@@ -26,10 +27,10 @@ public class GeometryUtilsTest {
     }
 
     @Test
-    public void testDecodeCRSThrowsExceptionForInvalidEpsgCode() throws FactoryException {
+    public void testDecodeCRSThrowsExceptionForInvalidEpsgCode() throws GeometryParseException {
         String validEpsg = "eps:12345";
 
-        thrown.expect(FactoryException.class);
+        thrown.expect(GeometryParseException.class);
         CoordinateReferenceSystem crs = GeometryUtils.decodeCRS(validEpsg);
     }
 }
