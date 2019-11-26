@@ -5,7 +5,6 @@
  */
 package org.n52.wacodis.javaps.preprocessing;
 
-import com.vividsolutions.jts.geom.MultiPolygon;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -19,14 +18,12 @@ import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
 import org.geotools.data.store.ReprojectingFeatureCollection;
-import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.vividsolutions.jts.geom.Polygon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -58,7 +55,6 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
     private static final Logger LOGGER = LoggerFactory.getLogger(ReferenceDataPreprocessor.class);
 
     private static final String OUTPUT_FILENAME_PREFIX = "wacodis_traindata";
-    private static final String LANDCOVERCLASS_ATTRIBUTE = "class";
     private static final String[] SHAPEFILE_EXTENSIONS = new String[]{"shp", "shx", "dbf", "prj", "fix"};
 
     private String sourceEpsg;
@@ -140,6 +136,8 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
      */
     @Override
     public List<File> preprocess(SimpleFeatureCollection inputCollection, String outputDirectoryPath) throws WacodisProcessingException {
+        DataStore dataStore = null;
+
         LOGGER.info("Start reference data preprocessing for FeatureType: {}",
                 inputCollection.getSchema().getTypeName());
         CoordinateReferenceSystem targetCrs = decodeCRS(targetEpsg);
@@ -173,7 +171,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             }
 
             //create new shapefile datastore for reference data
-            DataStore dataStore = dataStoreFactory.createNewDataStore(params);
+            dataStore = dataStoreFactory.createNewDataStore(params);
             //derive and create output schema from input schema
             SimpleFeatureType outputSchema = constructOutputSchema(inputCollection.getSchema());
             dataStore.createSchema(outputSchema);
@@ -186,6 +184,10 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             return Arrays.asList(outputFiles);
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating shape file.", ex);
+        } finally {
+            if (dataStore != null) {
+                dataStore.dispose();
+            }
         }
     }
 
@@ -197,11 +199,10 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
         if (featureSource instanceof SimpleFeatureStore) {
             SimpleFeatureStore featureStore = (SimpleFeatureStore) featureSource;
-                     
+
             featureStore.setTransaction(transaction);
             try {
                 LOGGER.debug("starting transaction for file " + referenceDataFile.getName());
-                
 
                 featureStore.addFeatures(features);
                 transaction.commit();
@@ -219,31 +220,66 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
             LOGGER.error("cannot write features, unexpected feature source type " + featureSource.getClass().getSimpleName());
         }
     }
-    
-    private SimpleFeatureCollection transferFeaturesToOutputSchema(SimpleFeatureCollection inputFeatures, SimpleFeatureType outputSchema){
+
+    private SimpleFeatureCollection transferFeaturesToOutputSchema(SimpleFeatureCollection inputFeatures, SimpleFeatureType outputSchema) {
         List<SimpleFeature> outputFeatures = new ArrayList<>();
-        
+
         //transfer every feature from input schema to output schema
         try (SimpleFeatureIterator featureIterator = inputFeatures.features()) {
-            while(featureIterator.hasNext()){
+            while (featureIterator.hasNext()) {
                 SimpleFeature inputFeature = featureIterator.next();
                 SimpleFeature outputFeature = SimpleFeatureBuilder.build(outputSchema, inputFeature.getAttributes(), "");
+                copyGeometryToGeometryColumn(inputFeature, outputFeature); //for whatever reason the geometry is not added to the correct geometry attribute by default
+
                 outputFeatures.add(outputFeature);
             }
         }
-            
+
         return new ListFeatureCollection(outputSchema, outputFeatures);
     }
 
+    /**
+     * copy geometry from input feature's geometry column to output feature's
+     * geometry column
+     *
+     * @param inputFeature
+     * @param outputFeature
+     */
+    private void copyGeometryToGeometryColumn(SimpleFeature inputFeature, SimpleFeature outputFeature) {
+        int inputGeomAttrIndex = getGeometryAttributeIndex(inputFeature.getFeatureType());
+        int outputGeomAttrIndex = getGeometryAttributeIndex(outputFeature.getFeatureType());
 
+        Object geometry = inputFeature.getAttribute(inputGeomAttrIndex);
+        outputFeature.setAttribute(outputGeomAttrIndex, geometry);
+    }
+
+    /**
+     * @param schema
+     * @return the index of the geometry attribute of a schema (FeatureType)
+     */
+    private int getGeometryAttributeIndex(SimpleFeatureType schema) {
+        GeometryDescriptor geomDesc = schema.getGeometryDescriptor();
+        Name columnName = geomDesc.getName();
+
+        int index = schema.indexOf(columnName);
+
+        return index;
+    }
+
+    /**
+     * derive output schema from input schema (FeatureType)
+     *
+     * @param inputSchema
+     * @return derived output schema
+     */
     private SimpleFeatureType constructOutputSchema(SimpleFeatureType inputSchema) {
         List<AttributeDescriptor> outputAttributes = new ArrayList<>();
         GeometryType geomType = null;
-        
+
         //find geometry attribute, carry over all other attributes
         for (AttributeDescriptor inputAttribute : inputSchema.getAttributeDescriptors()) {
             AttributeType type = inputAttribute.getType();
-            if (type instanceof GeometryType && type.equals(inputSchema.getGeometryDescriptor().getType())) {
+            if (type instanceof GeometryType && type.equals(inputSchema.getGeometryDescriptor().getType())) { //e.g. gml feature collections contain a second geometry column "location", treat this columns as non-geometry attribute
                 geomType = (GeometryType) type;
             } else {
                 outputAttributes.add(inputAttribute);
@@ -252,7 +288,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
 
         //derive geometry type from input schema's geometry type and add to output schema attributes
         GeometryDescriptor outputGeometryDescriptor = createGeometryDescriptor(geomType, inputSchema.getGeometryDescriptor());
-        outputAttributes.add(0, outputGeometryDescriptor); //must be the first item
+        outputAttributes.add(0, outputGeometryDescriptor); //should be the first item
         //create derived output schema
         SimpleFeatureType outputSchema = new SimpleFeatureTypeImpl(
                 inputSchema.getName(), outputAttributes, outputGeometryDescriptor,
@@ -274,7 +310,7 @@ public class ReferenceDataPreprocessor implements InputDataPreprocessor<SimpleFe
                 gt, new NameImpl("the_geom"),
                 inputGeometryDescriptor.getMinOccurs(), inputGeometryDescriptor.getMaxOccurs(),
                 inputGeometryDescriptor.isNillable(), inputGeometryDescriptor.getDefaultValue());
-        
+
         return outputGeometryDescriptor;
     }
 
