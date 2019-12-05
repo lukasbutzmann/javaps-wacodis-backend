@@ -7,6 +7,7 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -38,8 +39,12 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
-import org.n52.wacodis.javaps.utils.GeometryUtils;
+import org.n52.wacodis.javaps.preprocessing.graph.InputDataOperator;
+import org.n52.wacodis.javaps.preprocessing.graph.InputDataWriter;
+import org.n52.wacodis.javaps.preprocessing.graph.PreprocessingExecutor;
+import org.n52.wacodis.javaps.preprocessing.graph.ReprojectingOperator;
+import org.n52.wacodis.javaps.preprocessing.graph.ShapeWriter;
+import org.n52.wacodis.javaps.preprocessing.graph.TrainDataOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -225,12 +230,21 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.config.getEpsg(), this.getNamingSuffix());
-
-        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.config.getWorkingDirectory());
-
+        
+        String fileIdentifier = (this.getNamingSuffix() != null) ? this.getNamingSuffix() : UUID.randomUUID().toString();
+        InputDataWriter shapeWriter = new ShapeWriter(new File(this.config.getWorkingDirectory(), "wacodis_traindata_"+fileIdentifier+".shp"));
+        
+        InputDataOperator reprojectingOperator = new ReprojectingOperator(this.config.getEpsg());
+        InputDataOperator trainDataOperator = new TrainDataOperator("class");
+        List<InputDataOperator> referenceDataOperatorList  = new ArrayList<>();
+        referenceDataOperatorList.add(reprojectingOperator);
+        referenceDataOperatorList.add(trainDataOperator);
+        
+        PreprocessingExecutor referencePreprocessor = new PreprocessingExecutor(shapeWriter ,referenceDataOperatorList);
+        File preprocessedReferenceData = referencePreprocessor.executeOperators(this.referenceData);
+        
         SingleCommandValue value = new SingleCommandValue();
-        value.setCommandValue(preprocessedReferenceData.get(0).getName());
+        value.setCommandValue(preprocessedReferenceData.getName());
         return value;
     }
 
