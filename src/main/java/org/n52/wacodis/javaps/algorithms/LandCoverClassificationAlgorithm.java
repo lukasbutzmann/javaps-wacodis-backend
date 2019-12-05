@@ -189,7 +189,6 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     private List<File> preprocessOpticalImages() throws WacodisProcessingException {
         HashMap<String, String> parameters = new HashMap();
-        parameters.put("epsg", this.getBackendConfig().getEpsg());
         try {
             parameters.put("area", GeometryUtils.geoJsonBboxToWkt(areaOfInterest));
         } catch (GeometryParseException ex) {

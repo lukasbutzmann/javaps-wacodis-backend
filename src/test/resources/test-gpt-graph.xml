@@ -7,48 +7,27 @@
       <file>${input}</file>
     </parameters>
   </node>
-  <node id="BandSelect">
-    <operator>BandSelect</operator>
+  <node id="Subset">
+    <operator>Subset</operator>
     <sources>
       <sourceProduct refid="Read"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <selectedPolarisations/>
       <sourceBands>B2,B3,B8</sourceBands>
-      <bandNamePattern/>
-    </parameters>
-  </node>
-  <node id="Reproject">
-    <operator>Reproject</operator>
-    <sources>
-      <sourceProduct refid="BandSelect"/>
-    </sources>
-    <parameters class="com.bc.ceres.binding.dom.XppDomElement">
-      <wktFile/>
-      <crs>${epsg}</crs>
-      <resampling>Nearest</resampling>
-      <referencePixelX/>
-      <referencePixelY/>
-      <easting/>
-      <northing/>
-      <orientation/>
-      <pixelSizeX/>
-      <pixelSizeY/>
-      <width/>
-      <height/>
-      <tileSizeX/>
-      <tileSizeY/>
-      <orthorectify>false</orthorectify>
-      <elevationModelName/>
-      <noDataValue>NaN</noDataValue>
-      <includeTiePointGrids>true</includeTiePointGrids>
-      <addDeltaBands>false</addDeltaBands>
+      <region>0,0,0,0</region>
+      <referenceBand>B2</referenceBand>
+      <geoRegion>${area}</geoRegion>
+      <subSamplingX>1</subSamplingX>
+      <subSamplingY>1</subSamplingY>
+      <fullSwath>false</fullSwath>
+      <tiePointGridNames/>
+      <copyMetadata>true</copyMetadata>
     </parameters>
   </node>
   <node id="Write">
     <operator>Write</operator>
     <sources>
-      <sourceProduct refid="Reproject"/>
+      <sourceProduct refid="Subset"/>
     </sources>
     <parameters class="com.bc.ceres.binding.dom.XppDomElement">
       <file>${output}</file>
@@ -58,16 +37,16 @@
   <applicationData id="Presentation">
     <Description/>
     <node id="Read">
-            <displayPosition x="37.0" y="119.0"/>
+      <displayPosition x="37.0" y="134.0"/>
     </node>
-    <node id="BandSelect">
-      <displayPosition x="185.0" y="109.0"/>
+    <node id="Subset">
+      <displayPosition x="175.0" y="101.0"/>
     </node>
     <node id="Reproject">
-      <displayPosition x="347.0" y="120.0"/>
+      <displayPosition x="340.0" y="98.0"/>
     </node>
     <node id="Write">
-            <displayPosition x="455.0" y="135.0"/>
+      <displayPosition x="455.0" y="135.0"/>
     </node>
   </applicationData>
 </graph>

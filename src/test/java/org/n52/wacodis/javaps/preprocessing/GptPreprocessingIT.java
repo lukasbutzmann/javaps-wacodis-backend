@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+
 import org.apache.commons.io.FileUtils;
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
@@ -39,18 +40,17 @@ import org.opengis.referencing.FactoryException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 //@RunWith(SpringJUnit4ClassRunner.class)
 //@ContextConfiguration(classes = {OpenAccessHubConfig.class, SentinelFileDownloader.class, WacodisBackendConfig.class})
 public class GptPreprocessingIT {
 
-    private static final String SENTINEL_FILE_PATH = "C:/Users/Sebastian/Entwicklung/Projekte/HSBO/wacodis/data/S2A_MSIL1C_20160330T082542_N0201_R021_T38WNA_20160330T082810.zip";
+    private static final String SENTINEL_FILE_PATH = "path/to/sentinelfile.SAFE";
     private static final String GPT_FILE = "test-gpt-graph.xml";
-    private static final String EPSG_PARAM = "epsg";
-    private static final String TARGET_EPSG_CODE = "EPSG:4326";
-    private static final String INVALID_EPSG_CODE = "invalid";
+    private static final String AREA_PARAM = "area";
+    private static final String AREA_VALUE = "POLYGON ((1.6887879371643066 46.937259674072266, 1.6887879371643066 46.94419479370117, 1.697301983833313 46.94419479370117, 1.697301983833313 46.937259674072266, 1.6887879371643066 46.937259674072266))";
+    private static final String INVALID_AREA_VALUE = "POLYGON ((1.6887879371643066 46.937259674072266, 1.6887879371643066 46.94419479370117, 1.697301983833313 46.94419479370117, 1.697301983833313 46.937259674072266))";
     private static final String TIFF_EXTENSION = ".tif";
     private static final String TMP_IMAGE_DIR_PREFIX = "tmp-image-dir";
 
@@ -78,27 +78,28 @@ public class GptPreprocessingIT {
     }
 
     @Test
-    public void testGptPreprocessing() throws WacodisProcessingException, MalformedURLException, IOException, FactoryException {
+    public void testGptPreprocessing() throws WacodisProcessingException, IOException {
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put(EPSG_PARAM, TARGET_EPSG_CODE);
+        parameters.put(AREA_PARAM, AREA_VALUE);
         this.imagePreprocessor = new GptPreprocessor(gptPath, parameters, TIFF_EXTENSION, "");
         File result = this.imagePreprocessor.preprocess(this.sentinelProduct, this.tmpImageDir.toString()).get(0);
         Product resProduct = ProductIO.readProduct(result.getPath());
 
         Assert.assertEquals(3, resProduct.getNumBands());
-        Assert.assertEquals(CRS.decode(TARGET_EPSG_CODE).toWKT(), resProduct.getSceneCRS().toWKT());
+        Assert.assertTrue(resProduct.getSceneRasterWidth() < this.sentinelProduct.getSceneRasterWidth());
+        Assert.assertTrue(resProduct.getSceneRasterHeight() < this.sentinelProduct.getSceneRasterHeight());
         resProduct.closeIO();
         resProduct.dispose();
     }
 
     @Test
-    public void testGptPreprocessingForInvalidParamezer() throws WacodisProcessingException, MalformedURLException, IOException, FactoryException {
+    public void testGptPreprocessingForInvalidParamezer() throws WacodisProcessingException {
         HashMap<String, String> parameters = new HashMap<String, String>();
-        parameters.put(EPSG_PARAM, INVALID_EPSG_CODE);
+        parameters.put(AREA_PARAM, INVALID_AREA_VALUE);
         this.imagePreprocessor = new GptPreprocessor(gptPath, parameters, TIFF_EXTENSION, "");
 
         exception.expect(WacodisProcessingException.class);
-        File result = this.imagePreprocessor.preprocess(this.sentinelProduct, this.tmpImageDir.toString()).get(0);
+        this.imagePreprocessor.preprocess(this.sentinelProduct, this.tmpImageDir.toString()).get(0);
     }
 
     @After
