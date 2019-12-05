@@ -60,6 +60,7 @@ public class ReferenceDataPreprocessorIT {
         SimpleFeatureCollection resultCollection = this.shpToFeatureCollection(result);
 
         Assert.assertFalse(resultCollection.isEmpty());
+        Assert.assertEquals("the_geom", resultCollection.getSchema().getGeometryDescriptor().getLocalName());
         Assert.assertEquals(CRS.decode(TARGET_EPSG_CODE).toWKT(),
                 resultCollection.getSchema().getCoordinateReferenceSystem().toWKT());
     }

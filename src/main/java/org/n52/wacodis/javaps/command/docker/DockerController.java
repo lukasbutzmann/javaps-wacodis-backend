@@ -7,6 +7,7 @@ import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Event;
 import com.github.dockerjava.api.model.Frame;
+import com.github.dockerjava.api.model.HostConfig;
 import com.github.dockerjava.api.model.PortBinding;
 import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
@@ -60,11 +61,11 @@ public class DockerController {
      */
     public CreateContainerResponse createDockerContainer(DockerContainer container, DockerRunCommandConfiguration runConfig) {
         List<String> cmdParams = getCommandParamsAsStringList(runConfig.getCommandParameters());
-        
+        HostConfig hostConfig = buildHostConfig(runConfig.getVolumeBindings(), runConfig.getPortBindings());
+
         CreateContainerResponse createdContainer = this.dockerClient.createContainerCmd(container.getImageName())
                 .withName(container.getContainerName())
-                .withBinds(runConfig.getVolumeBindings().stream().map(vb -> createBinding(vb)).collect(Collectors.toList()))
-                .withPortBindings(runConfig.getPortBindings().stream().map(pb -> PortBinding.parse(pb)).collect(Collectors.toList()))
+                .withHostConfig(hostConfig)
                 .withCmd(cmdParams)
                 .exec();
 
@@ -265,6 +266,17 @@ public class DockerController {
         return stringParams;
     }
 
+    private HostConfig buildHostConfig(List<String> volumeBindungs, List<String> portBindings) {
+        HostConfig hostConfig = HostConfig.newHostConfig()
+                .withBinds(volumeBindungs.stream().map(vb -> createBinding(vb)).collect(Collectors.toList()))
+                .withPortBindings(portBindings.stream().map(pb -> PortBinding.parse(pb)).collect(Collectors.toList()));
+
+        return hostConfig;
+    }
+
+    
+    
+    
     /**
      * only use for EventType 'CONTAINER' and Action 'die' add filters for
      * container id, EventType and Action when registering callback does not

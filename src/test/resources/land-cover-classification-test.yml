@@ -1,6 +1,6 @@
 id: land-cover-classification
 docker:
-    host: tcp://localhost:2375
+    host: unix:///var/run/docker.sock
     image: dlm_docker:wacodis-eo-hackathon
     container: wacodis-eo-dlm
     workDir: /public
@@ -21,4 +21,8 @@ command:
         - name: -result
           type: wps-process-reference
           value: RESULT_PATH
+          quantity: single
+        - name: -epsg
+          type: static-option
+          value: 4326
           quantity: single

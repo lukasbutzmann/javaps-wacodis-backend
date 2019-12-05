@@ -230,6 +230,11 @@
             <artifactId>snap-geotiff</artifactId>
             <version>${snap.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.esa.snap</groupId>
+            <artifactId>snap-ndvi</artifactId>
+            <version>${snap.version}</version>
+        </dependency>
         
         <!--Sentinel-2 Toolbox Dependencies --> 
         <dependency>
@@ -245,6 +250,11 @@
         <dependency>
             <groupId>org.esa.s2tbx</groupId>
             <artifactId>s2tbx-s2msi-resampler</artifactId> 
+            <version>${s2tbx.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.s2tbx</groupId>
+            <artifactId>s2tbx-radiometric-indices</artifactId> 
             <version>${s2tbx.version}</version>
         </dependency>
         

@@ -41,4 +41,10 @@ public class CommandConfig {
         this.arguments = arguments;
     }
 
+    @Override
+    public String toString() {
+        return "CommandConfig{" + "folder=" + folder + ", name="
+                + name + ", arguments=" + arguments + '}';
+    }
+
 }

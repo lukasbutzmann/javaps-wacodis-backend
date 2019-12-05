@@ -8,11 +8,11 @@ package org.n52.wacodis.javaps.algorithms;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
@@ -30,7 +30,6 @@ import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
 import org.n52.wacodis.javaps.command.MultipleCommandValue;
 import org.n52.wacodis.javaps.command.SingleCommandValue;
-import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -39,6 +38,7 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
+import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataOperator;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataWriter;
 import org.n52.wacodis.javaps.preprocessing.graph.PreprocessingExecutor;
@@ -72,17 +72,13 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    @Autowired
-    private WacodisBackendConfig config;
-
     private String opticalImagesSourceType;
-    private String opticalImagesSource;
+    private List<String> opticalImagesSources;
     private String referenceDataType;
     private String areaOfInterest;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
-    private Product sentinelProduct;
-    private String productName;
+    private List<Product> sentinelProductList;
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_TYPE",
@@ -102,9 +98,9 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             title = "Optical images sources",
             abstrakt = "Sources for the optical images",
             minOccurs = 1,
-            maxOccurs = 1)
-    public void setOpticalImagesSources(String value) {
-        this.opticalImagesSource = value;
+            maxOccurs = 6)
+    public void setOpticalImagesSources(List<String> value) {
+        this.opticalImagesSources = value;
     }
 
     @LiteralInput(
@@ -118,7 +114,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public void setReferenceDataType(String value) {
         this.referenceDataType = value;
     }
-    
+
     @LiteralInput(
             identifier = "AREA_OF_INTEREST",
             title = "Area of interest",
@@ -159,24 +155,10 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
 
     @Execute
     public void execute() throws WacodisProcessingException {
-        Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues();
-        
-        this.executeProcess(inputArgumentValues);
+        this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
-    }
-
-    private GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
-        try {
-            return new GenericFileData(new File(this.config.getWorkingDirectory(), fileName), "image/geotiff");
-        } catch (IOException ex) {
-            throw new WacodisProcessingException("Error while creating generic file data.", ex);
-        }
-    }
-
-    public String getProductName() {
-        return productName;
+        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
     }
 
     @Override
@@ -190,71 +172,61 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     @Override
-    public Map<String, AbstractCommandValue> createInputArgumentValues() throws WacodisProcessingException {
+    public String getGpfConfigName() {
+        return GPF_FILE;
+    }
+
+    @Override
+    public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.preprocessOpticalImages());
-        inputArgumentValues.put("REFERENCE_DATA", this.preprocessReferenceData());
-        inputArgumentValues.put("RESULT_PATH", this.getResultPath());
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("REFERENCE_DATA", this.createInputValue(basePath, this.preprocessReferenceData()));
+        inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
     }
 
-    private AbstractCommandValue preprocessOpticalImages() throws WacodisProcessingException {
-        HashMap<String, String> parameters = new HashMap<String, String>();
-
+    private List<File> preprocessOpticalImages() throws WacodisProcessingException {
+        HashMap<String, String> parameters = new HashMap();
+        parameters.put("epsg", this.getBackendConfig().getEpsg());
         try {
             parameters.put("area", GeometryUtils.geoJsonBboxToWkt(areaOfInterest));
-
-            InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.config.getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
-
-            // Download satellite data
-            File sentinelFile = sentinelDownloader.downloadSentinelFile(
-                    this.opticalImagesSource,
-                    this.config.getWorkingDirectory());
-            this.sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-
-            List<File> preprocessedImages = imagePreprocessor.preprocess(this.sentinelProduct, this.config.getWorkingDirectory());
-
-            MultipleCommandValue value = new MultipleCommandValue();
-            value.setCommandValue(Arrays.asList(preprocessedImages.get(0).getName()));
-            return value;
-
-        } catch (IOException ex) {
-            String message = "Error while retrieving Sentinel file";
-            LOGGER.debug(message, ex);
-            throw new WacodisProcessingException(message, ex);
         } catch (GeometryParseException ex) {
             throw new WacodisProcessingException("Error while trying to convert area of interest to WKT", ex);
         }
+        InputDataPreprocessor imagePreprocessor = new GptPreprocessor(FilenameUtils.concat(this.getBackendConfig().getGpfDir(), GPF_FILE), parameters, TIFF_EXTENSION, this.getNamingSuffix());
 
+        this.sentinelProductList = new ArrayList();
+        List<File> preprocessedImages = new ArrayList();
+        this.opticalImagesSources.forEach(ois -> {
+            try {
+                // Download satellite data
+                File sentinelFile = sentinelDownloader.downloadSentinelFile(
+                        ois,
+                        this.getBackendConfig().getWorkingDirectory(),
+                        false);
+                Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
+                this.sentinelProductList.add(sentinelProduct);
+                preprocessedImages.addAll(
+                        imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory()));
+            } catch (IOException ex) {
+                LOGGER.error("Error while retrieving Sentinel file: {}", ois, ex);
+            } catch (WacodisProcessingException ex) {
+                LOGGER.error("Error while preprocessing Sentinel file: {}", ois, ex);
+            }
+        });
+        if (preprocessedImages.isEmpty()) {
+            throw new WacodisProcessingException("No preprocessed Sentinel files available.");
+        }
+        return preprocessedImages;
     }
 
-    private AbstractCommandValue preprocessReferenceData() throws WacodisProcessingException {
-        
-        String fileIdentifier = (this.getNamingSuffix() != null) ? this.getNamingSuffix() : UUID.randomUUID().toString();
-        InputDataWriter shapeWriter = new ShapeWriter(new File(this.config.getWorkingDirectory(), "wacodis_traindata_"+fileIdentifier+".shp"));
-        
-        InputDataOperator reprojectingOperator = new ReprojectingOperator(this.config.getEpsg());
-        InputDataOperator trainDataOperator = new TrainDataOperator("class");
-        List<InputDataOperator> referenceDataOperatorList  = new ArrayList<>();
-        referenceDataOperatorList.add(reprojectingOperator);
-        referenceDataOperatorList.add(trainDataOperator);
-        
-        PreprocessingExecutor referencePreprocessor = new PreprocessingExecutor(shapeWriter ,referenceDataOperatorList);
-        File preprocessedReferenceData = referencePreprocessor.executeOperators(this.referenceData);
-        
-        SingleCommandValue value = new SingleCommandValue();
-        value.setCommandValue(preprocessedReferenceData.getName());
-        return value;
-    }
+    private File preprocessReferenceData() throws WacodisProcessingException {
+        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.getBackendConfig().getEpsg(), this.getNamingSuffix());
 
-    private AbstractCommandValue getResultPath() {
-        this.productName = this.getResultNamePrefix() + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
-
-        SingleCommandValue value = new SingleCommandValue();
-        value.setCommandValue(this.productName);
-        return value;
+        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.getBackendConfig().getWorkingDirectory());
+        return preprocessedReferenceData.get(0);
     }
 
 }

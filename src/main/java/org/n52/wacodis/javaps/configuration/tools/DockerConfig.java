@@ -47,6 +47,11 @@ public class DockerConfig {
     public void setWorkDir(String workDir) {
         this.workDir = workDir;
     }
-    
+
+    @Override
+    public String toString() {
+        return "DockerConfig{" + "host=" + host + ", image=" + image
+                + ", container=" + container + ", workDir=" + workDir + '}';
+    }
 
 }

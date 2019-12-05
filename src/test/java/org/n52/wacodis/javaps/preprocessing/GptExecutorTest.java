@@ -10,7 +10,9 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.n52.wacodis.javaps.preprocessing.gpt.GptArguments;
 import org.n52.wacodis.javaps.preprocessing.gpt.GptExecutor;
 
@@ -39,10 +41,11 @@ public class GptExecutorTest {
     @Test
     public void testPrepareArguments() {
 
-        String[] resultArgs = new String[3];
+        String[] resultArgs = new String[4];
         resultArgs[0] = GRAPH_FILE;
-        resultArgs[1] = "-P" + INPUT_PARAM_KEY + "=" + INPUT_PARAM_VALUE;
-        resultArgs[2] = "-P" + OUTPUT_PARAM_KEY + "=" + OUTPUT_PARAM_VALUE;
+        resultArgs[1] = "-e";
+        resultArgs[2] = "-P" + INPUT_PARAM_KEY + "=" + INPUT_PARAM_VALUE;
+        resultArgs[3] = "-P" + OUTPUT_PARAM_KEY + "=" + OUTPUT_PARAM_VALUE;
         Arrays.sort(resultArgs);
 
         GptExecutor executor = new GptExecutor();

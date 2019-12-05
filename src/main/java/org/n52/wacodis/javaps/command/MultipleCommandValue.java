@@ -13,4 +13,15 @@ import java.util.List;
  */
 public class MultipleCommandValue extends AbstractCommandValue<List<String>> {
 
+    public MultipleCommandValue(List<String> commandValue) {
+        super(commandValue);
+    }
+
+    @Override
+    public String toString() {
+        return "MultipleCommandValue{"
+                + this.getCommandValue().toString()
+                + "}";
+    }
+
 }

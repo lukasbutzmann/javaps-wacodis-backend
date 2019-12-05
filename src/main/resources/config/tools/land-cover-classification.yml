@@ -4,8 +4,6 @@ docker:
     image: dlm_docker:wacodis-eo-hackathon
     container: wacodis-eo-dlm
     workDir: /public
-parameter:
-    inputEpsg: 4326
 command:
     folder: /bin/ash
     name: /eo.sh
@@ -24,5 +22,5 @@ command:
           quantity: single
         - name: -epsg
           type: static-option
-          value: 4326
+          value: 32632
           quantity: single

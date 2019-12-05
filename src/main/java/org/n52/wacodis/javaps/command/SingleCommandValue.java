@@ -11,4 +11,14 @@ package org.n52.wacodis.javaps.command;
  */
 public class SingleCommandValue extends AbstractCommandValue<String> {
 
+    public SingleCommandValue(String commandValue) {
+        super(commandValue);
+    }
+
+    @Override
+    public String toString() {
+        return "SingleCommandValue{"
+                + this.getCommandValue()
+                + "}";
+    }
 }

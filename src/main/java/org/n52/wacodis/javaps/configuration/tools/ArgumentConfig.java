@@ -48,6 +48,12 @@ public class ArgumentConfig {
         this.quantity = quantity;
     }
 
+    @Override
+    public String toString() {
+        return "ArgumentConfig{" + "name=" + name + ", type=" + type
+                + ", value=" + value + ", quantity=" + quantity + '}';
+    }
+
     public static enum TypeValues {
 
         WPS_PROCESS_REFERENCE {

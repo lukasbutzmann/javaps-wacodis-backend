@@ -48,4 +48,10 @@ public class ToolConfig {
         this.parameter = parameter;
     }
 
+    @Override
+    public String toString() {
+        return "ToolConfig{" + "id=" + id + ", docker=" + docker + ", command="
+                + command + ", parameter=" + parameter + '}';
+    }
+
 }
