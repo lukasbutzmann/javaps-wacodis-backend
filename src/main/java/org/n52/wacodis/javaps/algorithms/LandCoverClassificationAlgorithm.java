@@ -45,6 +45,7 @@ import org.n52.wacodis.javaps.preprocessing.graph.PreprocessingExecutor;
 import org.n52.wacodis.javaps.preprocessing.graph.ReprojectingOperator;
 import org.n52.wacodis.javaps.preprocessing.graph.ShapeWriter;
 import org.n52.wacodis.javaps.preprocessing.graph.TrainDataOperator;
+import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
