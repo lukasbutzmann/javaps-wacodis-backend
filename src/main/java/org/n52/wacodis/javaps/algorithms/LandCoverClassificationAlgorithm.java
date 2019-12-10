@@ -223,10 +223,20 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     }
 
     private File preprocessReferenceData() throws WacodisProcessingException {
-        InputDataPreprocessor referencePreprocessor = new ReferenceDataPreprocessor(GeometryUtils.DEFAULT_INPUT_EPSG, this.getBackendConfig().getEpsg(), this.getNamingSuffix());
 
-        List<File> preprocessedReferenceData = referencePreprocessor.preprocess(this.referenceData, this.getBackendConfig().getWorkingDirectory());
-        return preprocessedReferenceData.get(0);
+        String fileIdentifier = (this.getNamingSuffix() != null) ? this.getNamingSuffix() : UUID.randomUUID().toString();
+        InputDataWriter shapeWriter = new ShapeWriter(new File(this.getBackendConfig().getWorkingDirectory(), "wacodis_traindata_" + fileIdentifier + ".shp"));
+
+        InputDataOperator reprojectingOperator = new ReprojectingOperator(GeometryUtils.DEFAULT_INPUT_EPSG);
+        InputDataOperator trainDataOperator = new TrainDataOperator("class");
+        List<InputDataOperator> referenceDataOperatorList = new ArrayList<>();
+        referenceDataOperatorList.add(reprojectingOperator);
+        referenceDataOperatorList.add(trainDataOperator);
+
+        PreprocessingExecutor referencePreprocessor = new PreprocessingExecutor(shapeWriter, referenceDataOperatorList);
+        File preprocessedReferenceData = referencePreprocessor.executeOperators(this.referenceData);
+
+        return preprocessedReferenceData;
     }
 
 }
