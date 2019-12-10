@@ -120,7 +120,7 @@ public abstract class AbstractAlgorithm {
      * Creates input argument values from a {@link List} of input data
      * {@link File} objects
      *
-     * @param basePath base path where to read the input data from
+     * @param basePath  base path where to read the input data from
      * @param inputData input data as {@link List} of {@link File} objects
      * @return {@link AbstractCommandValue} that encapsulates a {@link List} of
      * input data file paths
@@ -137,7 +137,7 @@ public abstract class AbstractAlgorithm {
     /**
      * Creates input argument values from an input data {@link File}
      *
-     * @param basePath base path where to read the input data from
+     * @param basePath  base path where to read the input data from
      * @param inputData input data as {@link File}
      * @return {@link AbstractCommandValue} that encapsulates an input data file
      * path
@@ -155,26 +155,7 @@ public abstract class AbstractAlgorithm {
     private String getToolConfigPath() {
         return this.config.getToolConfigDirectory() + "/" + this.getToolConfigName();
     }
-
-//    public String getToolConfigPath() throws URISyntaxException {
-//        String rawPath = this.config.getToolConfigDirectory() + "/" + this.getToolConfigName();
-//        URL url = this.getClass().getResource(rawPath);
-//        if (url != null) {
-//            return url.toExternalForm();
-//        } else {
-//            return rawPath;
-//        }
-//    }
-//
-//    public String getGpfConfigPath() throws URISyntaxException {
-//        String rawPath = this.config.getGpfDir() + "/" + this.getGpfConfigName();
-//        URL url = this.getClass().getResource(rawPath);
-//        if (url != null) {
-//            return url.toExternalForm();
-//        } else {
-//            return rawPath;
-//        }
-//    }
+    
     public abstract String getToolConfigName();
 
     public abstract String getGpfConfigName();
