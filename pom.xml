@@ -9,7 +9,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-        <javaps.version>1.4.0-SNAPSHOT</javaps.version>
+        <javaps.version>1.5.0-SNAPSHOT</javaps.version>
         <geotools.version>20.2</geotools.version>
         <snap.version>7.0.3</snap.version>
         <s2tbx.version>7.0.0</s2tbx.version>
