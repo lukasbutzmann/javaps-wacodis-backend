@@ -56,6 +56,7 @@ public abstract class AbstractAlgorithm {
         ToolConfig toolConfig;
         try {
             toolConfig = toolConfigParser.parse(this.getToolConfigPath());
+            toolConfig.getDocker().setContainer(toolConfig.getDocker().getContainer().trim() + this.namingSuffix); //add unique suffix to container name to prevent naming conflicts
         } catch (IOException ex) {
             String message = "Error while reading tool configuration";
             LOGGER.debug(message, ex);
@@ -63,8 +64,6 @@ public abstract class AbstractAlgorithm {
         }
 
         Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues(toolConfig.getDocker().getWorkDir());
-
-        String containerName = toolConfig.getDocker().getContainer() + this.getNamingSuffix();
 
         ProcessResult result;
         try {
@@ -76,7 +75,7 @@ public abstract class AbstractAlgorithm {
         }
         if (result.getResultCode() != 0) { //tool returns Result Code 0 if finished successfully
             throw new WacodisProcessingException("EO tool (container: "
-                    + containerName
+                    + toolConfig.getDocker().getContainer()
                     + " )exited with a non-zero result code, result code was "
                     + result.getResultCode()
                     + ", consult tool specific documentation for details");
