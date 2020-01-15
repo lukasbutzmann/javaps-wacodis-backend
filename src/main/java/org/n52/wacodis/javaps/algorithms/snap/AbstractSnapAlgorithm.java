@@ -63,7 +63,7 @@ public abstract class AbstractSnapAlgorithm {
         LOGGER.info("Succesfully wrote result product as GeoTIFF file: {}.", this.resultPath);
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
+        this.productMetadata = metadataCreator.createProductMetadata(sentinelProduct);
     }
 
     /**

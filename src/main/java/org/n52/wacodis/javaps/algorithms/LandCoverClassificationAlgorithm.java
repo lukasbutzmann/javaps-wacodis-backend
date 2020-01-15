@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
@@ -28,8 +27,6 @@ import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
-import org.n52.wacodis.javaps.command.MultipleCommandValue;
-import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -38,7 +35,6 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataOperator;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataWriter;
 import org.n52.wacodis.javaps.preprocessing.graph.PreprocessingExecutor;
@@ -158,7 +154,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
         this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
+        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProductList);
     }
 
     @Override

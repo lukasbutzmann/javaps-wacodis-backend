@@ -111,7 +111,7 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
         
-        this.productMetadata = metadataCreator.createProductMetadataBinding(Arrays.asList(this.sentinelProduct1, this.sentinelProduct2));
+        this.productMetadata = metadataCreator.createProductMetadata(Arrays.asList(this.sentinelProduct1, this.sentinelProduct2));
     }
 
     @Override

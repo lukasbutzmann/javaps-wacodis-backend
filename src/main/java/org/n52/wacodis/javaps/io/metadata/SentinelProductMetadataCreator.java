@@ -5,51 +5,113 @@
  */
 package org.n52.wacodis.javaps.io.metadata;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
+
+import org.esa.snap.core.datamodel.GeoPos;
+import org.esa.snap.core.datamodel.PixelPos;
 import org.esa.snap.core.datamodel.Product;
 
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 public class SentinelProductMetadataCreator implements ProductMetadataCreator<Product> {
 
+    private static final String DATA_ENVELOPE_TYPE = "WacodisProductDataEnvelope";
+
     @Override
-    public ProductMetadata createProductMetadataBinding(Product product) {
+    public ProductMetadata createProductMetadata(Product product) {
         ProductMetadata metadata = new ProductMetadata();
-        metadata.setSourceType("CopernicusDataEnvelope");
+        metadata.setSourceType(DATA_ENVELOPE_TYPE);
         metadata.setTimeFrame(createTimeFrame(product));
+        metadata.setAreaOfInterest(createAreaOfInterest(product));
+        metadata.setCreated(LocalDateTime.now(ZoneOffset.UTC));
         return metadata;
     }
 
     @Override
-    public ProductMetadata createProductMetadataBinding(List<Product> productList) {
+    public ProductMetadata createProductMetadata(List<Product> productList) {
         ProductMetadata metadata = new ProductMetadata();
         metadata.setSourceType("CopernicusDataEnvelope");
         metadata.setTimeFrame(createTimeFrame(productList));
+        metadata.setAreaOfInterest(createAreaOfInterest(productList));
+        metadata.setCreated(LocalDateTime.now(ZoneOffset.UTC));
         return metadata;
     }
 
-    private TimeFrame createTimeFrame(Product product) {
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-        df.setTimeZone(tz);
+    @Override
+    public ProductMetadata createProductMetadata(Product resultProduct, List<Product> sourceProducts) {
+        ProductMetadata metadata = createProductMetadata(resultProduct);
+        if (metadata.getAreaOfInterest() == null) {
+            metadata.setAreaOfInterest(createAreaOfInterest(sourceProducts));
+        }
+        if (metadata.getTimeFrame() == null) {
+            metadata.setTimeFrame(createTimeFrame(sourceProducts));
+        }
+        return metadata;
+    }
+
+    protected AreaOfInterest createAreaOfInterest(Product product) {
+        if (product.getSceneGeoCoding() == null) {
+            return null;
+        }
+        GeoPos minNorthWest = product.getSceneGeoCoding().getGeoPos(new PixelPos(0, 0), null);
+        GeoPos maxSouthEast = product.getSceneGeoCoding().getGeoPos(
+                new PixelPos(product.getSceneRasterWidth(),
+                        product.getSceneRasterHeight()), null);
+        AreaOfInterest result = new AreaOfInterest();
+        result.setExtent(new double[]{
+                minNorthWest.getLon(), maxSouthEast.getLat(),
+                maxSouthEast.getLon(), minNorthWest.getLat()
+        });
+        return result;
+    }
+
+    protected AreaOfInterest createAreaOfInterest(List<Product> productList) {
+        AreaOfInterest aoi = createAreaOfInterest(productList.get(0));
+        double minLon = aoi.getExtent()[0];
+        double minLat = aoi.getExtent()[1];
+        double maxLon = aoi.getExtent()[2];
+        double maxLat = aoi.getExtent()[3];
+        for (Product p : productList) {
+            aoi = createAreaOfInterest(p);
+            if (aoi.getExtent()[0] < minLon) {
+                minLon = aoi.getExtent()[0];
+            }
+            if (aoi.getExtent()[1] < minLat) {
+                minLat = aoi.getExtent()[1];
+            }
+            if (aoi.getExtent()[2] > maxLon) {
+                maxLon = aoi.getExtent()[2];
+            }
+            if (aoi.getExtent()[3] > maxLat) {
+                maxLat = aoi.getExtent()[3];
+            }
+        }
+        aoi.setExtent(new double[]{minLon, minLat, maxLon, maxLat});
+        return aoi;
+    }
+
+    protected TimeFrame createTimeFrame(Product product) {
+        if (!(product.getStartTime() != null && product.getEndTime() != null)) {
+            return null;
+        }
 
         TimeFrame timeFrame = new TimeFrame();
-        timeFrame.setStartTime(df.format(product.getStartTime().getAsDate()));
-        timeFrame.setEndTime(df.format(product.getEndTime().getAsDate()));
+        timeFrame.setStartTime(product.getStartTime().getAsDate().toInstant()
+                .atZone(ZoneOffset.UTC)
+                .toLocalDateTime());
+
+        timeFrame.setEndTime(product.getEndTime().getAsDate().toInstant()
+                .atZone(ZoneOffset.UTC)
+                .toLocalDateTime());
+
         return timeFrame;
     }
 
-    private TimeFrame createTimeFrame(List<Product> productList) {
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'");
-        df.setTimeZone(tz);
-
+    protected TimeFrame createTimeFrame(List<Product> productList) {
         TimeFrame timeFrame = new TimeFrame();
         Date startDate = null;
         Date endDate = null;
@@ -61,8 +123,12 @@ public class SentinelProductMetadataCreator implements ProductMetadataCreator<Pr
                 endDate = p.getEndTime().getAsDate();
             }
         }
-        timeFrame.setStartTime(df.format(startDate));
-        timeFrame.setEndTime(df.format(endDate));
+        timeFrame.setStartTime(startDate.toInstant()
+                .atZone(ZoneOffset.UTC)
+                .toLocalDateTime());
+        timeFrame.setEndTime(endDate.toInstant()
+                .atZone(ZoneOffset.UTC)
+                .toLocalDateTime());
 
         return timeFrame;
     }

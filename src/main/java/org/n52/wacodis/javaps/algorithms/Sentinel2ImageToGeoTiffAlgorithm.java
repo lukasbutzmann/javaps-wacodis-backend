@@ -79,7 +79,7 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
 
             ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
             LOGGER.info("Creating metadata for Sentinel product");
-            this.metadata = metadataCreator.createProductMetadataBinding(sentinelProduct);
+            this.metadata = metadataCreator.createProductMetadata(sentinelProduct);
         } catch (WacodisProcessingException ex) {
             LOGGER.error(ex.getMessage());
             LOGGER.debug("Error while creating output", ex);

@@ -99,7 +99,7 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
         this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProduct);
+        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProduct);
     }
 
     @Override
