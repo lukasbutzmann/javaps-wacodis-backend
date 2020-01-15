@@ -6,9 +6,13 @@
 package org.n52.wacodis.javaps.io.datahandler.generator;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JSR310Module;
 import org.n52.javaps.annotation.Properties;
 import org.n52.javaps.description.TypedProcessOutputDescription;
 import org.n52.javaps.io.AbstractPropertiesInputOutputHandler;
@@ -29,16 +33,20 @@ import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
         propertyFileName = "product-metadata.json")
 public class ProductMetadataJsonGenerator extends AbstractPropertiesInputOutputHandler implements OutputHandler {
 
+    private ObjectMapper objectMapper;
+
     public ProductMetadataJsonGenerator() {
         super();
         addSupportedBinding(ProductMetadataBinding.class);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.registerModule(new JSR310Module());
     }
 
     @Override
     public InputStream generate(TypedProcessOutputDescription<?> description, Data<?> data, Format format) throws IOException, EncodingException {
         ProductMetadata metadata = ((ProductMetadataBinding) data).getPayload();
-        ObjectMapper objectMapper = new ObjectMapper();
-
+        
         return new ByteArrayInputStream(objectMapper.writeValueAsBytes(metadata));
     }
 
