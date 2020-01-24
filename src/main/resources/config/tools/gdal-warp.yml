@@ -5,7 +5,6 @@ docker:
     container: wacodis-gdal-warp
     workDir: /home
 command:
-    folder: home
     name: gdalwarp
     arguments:
         - name: -t_srs
