@@ -74,11 +74,11 @@ public abstract class AbstractAlgorithm {
             throw new WacodisProcessingException(message, ex);
         }
         if (result.getResultCode() != 0) { //tool returns Result Code 0 if finished successfully
-            throw new WacodisProcessingException("EO tool (container: "
-                    + toolConfig.getDocker().getContainer()
-                    + " )exited with a non-zero result code, result code was "
-                    + result.getResultCode()
-                    + ", consult tool specific documentation for details");
+            throw new WacodisProcessingException(String.format("EO tool (container: %s) exited with non-zero result code (%s)." +
+                            " Cause: %s. Consult tool specific documentation for details",
+                    toolConfig.getDocker().getContainer(),
+                    result.getResultCode(),
+                    result.getOutputMessage()));
         }
         LOGGER.info("landcover classification docker process finished "
                 + "executing with result code: {}", result.getResultCode());
