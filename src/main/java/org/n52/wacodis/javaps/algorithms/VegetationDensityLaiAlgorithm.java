@@ -121,7 +121,7 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages(), true));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;

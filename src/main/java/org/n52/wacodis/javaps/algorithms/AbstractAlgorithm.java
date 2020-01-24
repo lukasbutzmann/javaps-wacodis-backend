@@ -125,10 +125,13 @@ public abstract class AbstractAlgorithm {
      * input data file paths
      * @throws WacodisProcessingException
      */
-    public AbstractCommandValue createInputValue(String basePath, List<File> inputData) throws WacodisProcessingException {
+    AbstractCommandValue createInputValue(String basePath, List<File> inputData, boolean forUnix) {
         MultipleCommandValue value = new MultipleCommandValue(
                 inputData.stream()
-                        .map(sF -> FilenameUtils.concat(basePath, sF.getName()))
+                        .map(sF -> {
+                            String path = FilenameUtils.concat(basePath, sF.getName());
+                            return forUnix ? FilenameUtils.separatorsToUnix(path) : path;
+                        })
                         .collect(Collectors.toList()));
         return value;
     }
@@ -142,9 +145,9 @@ public abstract class AbstractAlgorithm {
      * path
      * @throws WacodisProcessingException
      */
-    public AbstractCommandValue createInputValue(String basePath, File inputData) throws WacodisProcessingException {
-        SingleCommandValue value = new SingleCommandValue(FilenameUtils.concat(basePath, inputData.getName()));
-        return value;
+    AbstractCommandValue createInputValue(String basePath, File inputData, boolean forUnix) {
+        String path = FilenameUtils.concat(basePath, inputData.getName());
+        return forUnix ? new SingleCommandValue(FilenameUtils.separatorsToUnix(path)) : new SingleCommandValue(path);
     }
 
     public String getProductName() {

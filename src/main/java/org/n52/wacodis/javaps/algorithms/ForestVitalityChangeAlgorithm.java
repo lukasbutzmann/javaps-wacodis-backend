@@ -133,8 +133,8 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_1", this.createInputValue(basePath, this.preprocessOpticalImages1()));
-        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_2", this.createInputValue(basePath, this.preprocessOpticalImages2()));
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_1", this.createInputValue(basePath, this.preprocessOpticalImages1(), true));
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES_2", this.createInputValue(basePath, this.preprocessOpticalImages2(), true));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
