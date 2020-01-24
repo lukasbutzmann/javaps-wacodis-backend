@@ -27,6 +27,8 @@ import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
+import org.n52.wacodis.javaps.command.SingleCommandValue;
+import org.n52.wacodis.javaps.configuration.tools.ToolConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -203,8 +205,16 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                         false);
                 Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
                 this.sentinelProductList.add(sentinelProduct);
-                preprocessedImages.addAll(
-                        imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory()));
+                List<File> preprocessedFiles = imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory());
+                preprocessedFiles.forEach(pF -> {
+                    try {
+                        preprocessedImages.add(executeGdalWarp(pF));
+                    } catch (WacodisProcessingException ex) {
+                        String message = String.format("Error while executing GDAL warp for file: %s", pF.getName());
+                        LOGGER.error(message);
+                        LOGGER.debug(message, ex);
+                    }
+                });
             } catch (IOException ex) {
                 LOGGER.error("Error while retrieving Sentinel file: {}", ois, ex);
             } catch (WacodisProcessingException ex) {

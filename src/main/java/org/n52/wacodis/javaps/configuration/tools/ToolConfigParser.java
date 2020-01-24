@@ -34,7 +34,7 @@ public class ToolConfigParser {
     /**
      * Parses the given YAML config file
      *
-     * @param input {@link InpuStream} for the YAML config file
+     * @param input {@link InputStream} for the YAML config file
      * @return {@link ToolConfig}
      * @throws IOException
      */
