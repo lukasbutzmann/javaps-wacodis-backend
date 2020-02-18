@@ -263,7 +263,13 @@
             <artifactId>s1tbx-op-utilities</artifactId>
             <version>${s2tbx.version}</version>
         </dependency>
-       
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

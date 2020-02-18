@@ -13,7 +13,9 @@ import java.util.List;
  */
 public interface ProductMetadataCreator<T> {
 
-    public ProductMetadata createProductMetadataBinding(T product);
+    public ProductMetadata createProductMetadata(T product);
     
-    public ProductMetadata createProductMetadataBinding(List<T> productList);
+    public ProductMetadata createProductMetadata(List<T> productList);
+
+    public ProductMetadata createProductMetadata(T resultProduct, List<T> sourceProducts);
 }

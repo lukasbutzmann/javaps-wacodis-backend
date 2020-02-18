@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
 import org.esa.snap.core.dataio.ProductIO;
@@ -28,8 +27,8 @@ import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.command.AbstractCommandValue;
-import org.n52.wacodis.javaps.command.MultipleCommandValue;
 import org.n52.wacodis.javaps.command.SingleCommandValue;
+import org.n52.wacodis.javaps.configuration.tools.ToolConfig;
 import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
@@ -38,7 +37,6 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
 import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.GptPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.InputDataPreprocessor;
-import org.n52.wacodis.javaps.preprocessing.ReferenceDataPreprocessor;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataOperator;
 import org.n52.wacodis.javaps.preprocessing.graph.InputDataWriter;
 import org.n52.wacodis.javaps.preprocessing.graph.PreprocessingExecutor;
@@ -158,7 +156,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
         this.executeProcess();
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadataBinding(this.sentinelProductList);
+        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProductList);
     }
 
     @Override
@@ -180,8 +178,8 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages()));
-        inputArgumentValues.put("REFERENCE_DATA", this.createInputValue(basePath, this.preprocessReferenceData()));
+        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages(), true));
+        inputArgumentValues.put("REFERENCE_DATA", this.createInputValue(basePath, this.preprocessReferenceData(), true));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
@@ -207,8 +205,16 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                         false);
                 Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
                 this.sentinelProductList.add(sentinelProduct);
-                preprocessedImages.addAll(
-                        imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory()));
+                List<File> preprocessedFiles = imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory());
+                preprocessedFiles.forEach(pF -> {
+                    try {
+                        preprocessedImages.add(executeGdalWarp(pF));
+                    } catch (WacodisProcessingException ex) {
+                        String message = String.format("Error while executing GDAL warp for file: %s", pF.getName());
+                        LOGGER.error(message);
+                        LOGGER.debug(message, ex);
+                    }
+                });
             } catch (IOException ex) {
                 LOGGER.error("Error while retrieving Sentinel file: {}", ois, ex);
             } catch (WacodisProcessingException ex) {

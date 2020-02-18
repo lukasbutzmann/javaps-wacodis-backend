@@ -5,14 +5,17 @@
  */
 package org.n52.wacodis.javaps.io.metadata;
 
+import java.time.LocalDateTime;
+
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 public class ProductMetadata {
 
     private TimeFrame timeFrame;
     private String sourceType;
+    private AreaOfInterest areaOfInterest;
+    private LocalDateTime crated;
 
     public TimeFrame getTimeFrame() {
         return timeFrame;
@@ -30,4 +33,19 @@ public class ProductMetadata {
         this.sourceType = sourceType;
     }
 
+    public AreaOfInterest getAreaOfInterest() {
+        return areaOfInterest;
+    }
+
+    public void setAreaOfInterest(AreaOfInterest areaOfInterest) {
+        this.areaOfInterest = areaOfInterest;
+    }
+
+    public LocalDateTime getCrated() {
+        return crated;
+    }
+
+    public void setCreated(LocalDateTime crated) {
+        this.crated = crated;
+    }
 }
