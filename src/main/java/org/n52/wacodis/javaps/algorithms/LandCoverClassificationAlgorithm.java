@@ -140,7 +140,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.getProductName());
+        return this.createProductOutput(this.getResultFile());
     }
 
     @ComplexOutput(
@@ -154,9 +154,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     @Execute
     public void execute() throws WacodisProcessingException {
         this.executeProcess();
-
-        ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProductList);
+        this.productMetadata = this.createProductMetadata(this.sentinelProductList);
     }
 
     @Override

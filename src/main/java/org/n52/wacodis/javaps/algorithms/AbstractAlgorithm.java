@@ -14,6 +14,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FilenameUtils;
+import org.esa.snap.core.dataio.ProductIO;
+import org.esa.snap.core.datamodel.Product;
 import org.n52.javaps.io.GenericFileData;
 import org.n52.wacodis.javaps.WacodisProcessingException;
 import org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor;
@@ -24,6 +26,9 @@ import org.n52.wacodis.javaps.command.SingleCommandValue;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.configuration.tools.ToolConfig;
 import org.n52.wacodis.javaps.configuration.tools.ToolConfigParser;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
+import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
+import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -129,9 +134,9 @@ public abstract class AbstractAlgorithm {
         return this.config;
     }
 
-    public GenericFileData createProductOutput(String fileName) throws WacodisProcessingException {
+    public GenericFileData createProductOutput(File file) throws WacodisProcessingException {
         try {
-            return new GenericFileData(new File(this.config.getWorkingDirectory(), fileName), "image/geotiff");
+            return new GenericFileData(file, "image/geotiff");
         } catch (IOException ex) {
             throw new WacodisProcessingException("Error while creating generic file data.", ex);
         }
@@ -144,7 +149,7 @@ public abstract class AbstractAlgorithm {
      * @return {@link AbstractCommandValue} that encapsulates the EO process
      * result path
      */
-    AbstractCommandValue getResultPath(String basePath) {
+    protected AbstractCommandValue getResultPath(String basePath) {
         this.productName = this.getResultNamePrefix() + "_" + UUID.randomUUID().toString() + this.getNamingSuffix() + TIFF_EXTENSION;
 
         SingleCommandValue value = new SingleCommandValue(FilenameUtils.concat(basePath, productName));
@@ -161,7 +166,7 @@ public abstract class AbstractAlgorithm {
      * input data file paths
      * @throws WacodisProcessingException
      */
-    AbstractCommandValue createInputValue(String basePath, List<File> inputData, boolean forUnix) {
+    protected AbstractCommandValue createInputValue(String basePath, List<File> inputData, boolean forUnix) {
         MultipleCommandValue value = new MultipleCommandValue(
                 inputData.stream()
                         .map(sF -> {
@@ -181,13 +186,44 @@ public abstract class AbstractAlgorithm {
      * path
      * @throws WacodisProcessingException
      */
-    AbstractCommandValue createInputValue(String basePath, File inputData, boolean forUnix) {
+    protected AbstractCommandValue createInputValue(String basePath, File inputData, boolean forUnix) {
         String path = FilenameUtils.concat(basePath, inputData.getName());
         return forUnix ? new SingleCommandValue(FilenameUtils.separatorsToUnix(path)) : new SingleCommandValue(path);
     }
 
+    /**
+     * Creates {@link ProductMetadata} for a resulting {@link Product} considering the source {@link Product} files.
+     *
+     * @param sourceProducts List of {@link Product} file that were used for generating a result
+     * @return {@link ProductMetadata} for a resulting {@link Product}
+     */
+    protected ProductMetadata createProductMetadata(List<Product> sourceProducts) {
+        ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
+        ProductMetadata productMetadata = null;
+        try {
+            Product resultProduct = ProductIO.readProduct(this.getResultFile());
+            productMetadata = metadataCreator.createProductMetadata(resultProduct, sourceProducts);
+        } catch (IOException ex) {
+            LOGGER.error("Product metadata creation for result product failed: {}", ex.getMessage());
+            LOGGER.debug("Could not read result as SNAP Product.", ex);
+        } finally {
+            if (productMetadata == null) {
+                productMetadata = metadataCreator.createProductMetadata(sourceProducts);
+            }
+        }
+        return productMetadata;
+    }
+
+    protected void setProductName(String productName) {
+        this.productName = productName;
+    }
+
     public String getProductName() {
         return productName;
+    }
+
+    public File getResultFile() {
+        return new File(this.getBackendConfig().getWorkingDirectory(), this.getProductName());
     }
 
     protected String getToolConfigPath(String toolConfigName) {
