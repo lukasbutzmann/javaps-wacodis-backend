@@ -17,8 +17,6 @@ import org.n52.wacodis.javaps.io.data.binding.complex.GeotiffFileDataBinding;
 import org.n52.wacodis.javaps.io.data.binding.complex.ProductMetadataBinding;
 import org.n52.wacodis.javaps.io.http.SentinelFileDownloader;
 import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
-import org.n52.wacodis.javaps.io.metadata.ProductMetadataCreator;
-import org.n52.wacodis.javaps.io.metadata.SentinelProductMetadataCreator;
 import org.n52.wacodis.javaps.preprocessing.graph.*;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.slf4j.Logger;
@@ -111,7 +109,7 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.getProductName());
+        return this.createProductOutput(this.getResultFile());
     }
 
     @ComplexOutput(
@@ -125,9 +123,7 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
     @Execute
     public void execute() throws WacodisProcessingException {
         this.executeProcess();
-
-        ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProduct);
+        this.productMetadata = this.createProductMetadata(Collections.singletonList(this.sentinelProduct));
     }
 
     @Override
