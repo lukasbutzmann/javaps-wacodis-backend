@@ -7,8 +7,10 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.n52.javaps.algorithm.annotation.Algorithm;
@@ -29,7 +31,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- *
  * @author <a href="mailto:s.drost@52north.org">Sebastian Drost</a>
  */
 @Algorithm(
@@ -83,7 +84,7 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
             binding = GeotiffFileDataBinding.class
     )
     public GenericFileData getOutput() throws WacodisProcessingException {
-        return this.createProductOutput(this.getProductName());
+        return this.createProductOutput(this.getResultFile());
     }
 
     @ComplexOutput(
@@ -97,9 +98,7 @@ public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
     @Execute
     public void execute() throws WacodisProcessingException {
         this.executeProcess();
-
-        ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadata(this.sentinelProduct);
+        this.productMetadata = this.createProductMetadata(Collections.singletonList(this.sentinelProduct));
     }
 
     @Override

@@ -38,7 +38,7 @@ public class ProductMetadataJsonGenerator extends AbstractPropertiesInputOutputH
     public ProductMetadataJsonGenerator() {
         super();
         addSupportedBinding(ProductMetadataBinding.class);
-        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         objectMapper.registerModule(new JSR310Module());
     }

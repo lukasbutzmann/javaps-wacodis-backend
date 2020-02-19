@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -80,7 +81,7 @@ public class SentinelFileDownloader {
      * Downloads a Sentinel-2 image file from the specified URL, writes it to
      * the specified location and unzips the file.
      *
-     * @param url URL for the Sentinel-2 image.
+     * @param url     URL for the Sentinel-2 image.
      * @param outPath Path to the directory to save the image file in
      * @return the file that contains the image
      * @throws IOException if internal file handling fails for some reason
@@ -93,9 +94,9 @@ public class SentinelFileDownloader {
      * Downloads a Sentinel-2 image file from the specified URL and writes it to
      * the specified location.
      *
-     * @param url URL for the Sentinel-2 image.
+     * @param url     URL for the Sentinel-2 image.
      * @param outPath Path to the directory to save the image file in
-     * @param unzip Specify whether to unzip the file or not
+     * @param unzip   Specify whether to unzip the file or not
      * @return the file that contains the image
      * @throws IOException if internal file handling fails for some reason
      */
@@ -164,7 +165,7 @@ public class SentinelFileDownloader {
     /**
      * Unzips a zipped Sentinel image at the specified location
      *
-     * @param file {@link File} to unzip
+     * @param file    {@link File} to unzip
      * @param outPath Path at which the file will be unzipped
      * @return The unzipped SAFE file
      * @throws IOException
@@ -180,7 +181,7 @@ public class SentinelFileDownloader {
                 } else {
                     entryDestination.getParentFile().mkdirs();
                     try (InputStream in = zipFile.getInputStream(entry);
-                            OutputStream out = new FileOutputStream(entryDestination)) {
+                         OutputStream out = new FileOutputStream(entryDestination)) {
                         IOUtils.copy(in, out);
                     }
                 }
@@ -189,8 +190,16 @@ public class SentinelFileDownloader {
         if (!keepZip) {
             file.delete();
         }
-        return new File(FilenameUtils.concat(outPath,
-                FilenameUtils.getBaseName(file.getName()) + "." + SAFE_EXTENSION));
+        String baseName = FilenameUtils.getBaseName(file.getName());
+        //Case CODE-DE: Naming pattern for zip-files is *.SAFE.zip
+        if (baseName.contains(".SAFE")) {
+            return new File(FilenameUtils.concat(outPath, baseName));
+        }
+        //Case CODE-DE: Naming pattern for zip-files is *.zip
+        else {
+            return new File(FilenameUtils.concat(outPath, baseName + "." + SAFE_EXTENSION));
+        }
+
     }
 
     private File retrieveSentinelTestFile(String outPath, boolean unzip) throws IOException {

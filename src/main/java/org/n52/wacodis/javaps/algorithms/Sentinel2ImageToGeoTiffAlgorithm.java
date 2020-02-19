@@ -7,7 +7,9 @@ package org.n52.wacodis.javaps.algorithms;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+
 import org.esa.snap.core.dataio.ProductIO;
 import org.esa.snap.core.datamodel.Product;
 import org.n52.javaps.algorithm.annotation.Algorithm;
@@ -39,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         identifier = "de.hsbo.wacodis.snap.s2togeotiff",
         title = "Sentinel-2 Download to GeoTiff Process",
         abstrakt = "Perform a Sentinel-2 file download, resample the image and "
-        + "write it out as GeoTiff.",
+                + "write it out as GeoTiff.",
         version = "0.0.1",
         storeSupported = true,
         statusSupported = true)
@@ -73,13 +75,19 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
         try {
             File sentinelFile = fileDownloader.downloadSentinelFile(imageUrl);
             Product sentinelProduct = ProductIO.readProduct(sentinelFile.getPath());
-            
+
             LOGGER.info("Converting Sentinel product to GeoTIFF");
-            this.product = createProductOutput(sentinelProduct);
+            File output = createProductOutput(sentinelProduct);
+
+            try {
+                this.product = new GenericFileData(output, "image/geotiff");
+            } catch (IOException ex) {
+                throw new WacodisProcessingException("Error while creating generic file data.", ex);
+            }
 
             ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
             LOGGER.info("Creating metadata for Sentinel product");
-            this.metadata = metadataCreator.createProductMetadata(sentinelProduct);
+            this.metadata = metadataCreator.createProductMetadata(ProductIO.readProduct(output.getPath()), Collections.singletonList(sentinelProduct));
         } catch (WacodisProcessingException ex) {
             LOGGER.error(ex.getMessage());
             LOGGER.debug("Error while creating output", ex);
@@ -105,16 +113,11 @@ public class Sentinel2ImageToGeoTiffAlgorithm {
         return this.metadata;
     }
 
-    private GenericFileData createProductOutput(Product sentinelProduct) throws WacodisProcessingException {
+    private File createProductOutput(Product sentinelProduct) throws WacodisProcessingException {
         String targetDirectory = config.getWorkingDirectory();
         InputDataPreprocessor preprocessor = new Sentinel2Preprocessor(false);
 
         List<File> outputs = preprocessor.preprocess(sentinelProduct, targetDirectory);
-
-        try {
-            return new GenericFileData(outputs.get(0), "image/geotiff");
-        } catch (IOException ex) {
-            throw new WacodisProcessingException("Error while creating generic file data.", ex);
-        }
+        return outputs.get(0);
     }
 }
