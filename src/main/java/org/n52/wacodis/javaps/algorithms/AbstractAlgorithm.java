@@ -53,12 +53,11 @@ public abstract class AbstractAlgorithm {
     @Autowired
     private EoToolExecutor eoToolExecutor;
 
-    private String namingSuffix;
+    private String namingSuffix = "_" + System.currentTimeMillis();;
 
     private String productName;
 
     public void executeProcess() throws WacodisProcessingException {
-        this.namingSuffix = "_" + System.currentTimeMillis();
 
         ToolConfig toolConfig = this.getToolConfig(this.getToolConfigPath(this.getToolConfigName()));
         Map<String, AbstractCommandValue> inputArgumentValues = this.createInputArgumentValues(toolConfig.getDocker().getWorkDir());
