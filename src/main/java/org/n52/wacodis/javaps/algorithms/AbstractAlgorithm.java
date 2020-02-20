@@ -100,7 +100,7 @@ public abstract class AbstractAlgorithm {
         }
     }
 
-    protected File executeGdalWarp(File file) throws WacodisProcessingException {
+    protected File executeGdalWarp(File file, String epsg) throws WacodisProcessingException {
         ToolConfig toolConfig = this.getToolConfig(this.getToolConfigPath(GDAL_CONFIG));
         String resultName = FilenameUtils.concat(this.getBackendConfig().getWorkingDirectory(),
                 FilenameUtils.getBaseName(file.getName())
@@ -108,18 +108,18 @@ public abstract class AbstractAlgorithm {
                         + "."
                         + FilenameUtils.getExtension(file.getName()));
         File outFile = new File(resultName);
-        Map<String, AbstractCommandValue> inputArgumentValues = this.createGdalInputArgumentValues(file, toolConfig.getDocker().getWorkDir(), outFile);
+        Map<String, AbstractCommandValue> inputArgumentValues = this.createGdalInputArgumentValues(file, toolConfig.getDocker().getWorkDir(), outFile, epsg);
 
         this.executeDockerTool(inputArgumentValues, toolConfig);
 
         return outFile;
     }
 
-    protected Map<String, AbstractCommandValue> createGdalInputArgumentValues(File inFile, String basePath, File outFile) {
+    protected Map<String, AbstractCommandValue> createGdalInputArgumentValues(File inFile, String basePath, File outFile, String epsg) {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
         inputArgumentValues.put("INPUT", this.createInputValue(basePath, inFile, true));
-        inputArgumentValues.put("TARGET_EPSG", new SingleCommandValue(this.getBackendConfig().getEpsg()));
+        inputArgumentValues.put("TARGET_EPSG", new SingleCommandValue(epsg));
         inputArgumentValues.put("OUTPUT", this.createInputValue(basePath, outFile, true));
 
         return inputArgumentValues;
