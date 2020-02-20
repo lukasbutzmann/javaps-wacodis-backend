@@ -1,0 +1,26 @@
+id: land-cover-classification
+docker:
+    host: unix:///var/run/docker.sock
+    image: dlm_docker:wacodis-eo-hackathon
+    container: wacodis-eo-dlm
+    workDir: /public
+command:
+    folder: /bin/ash
+    name: /eo.sh
+    arguments:
+        - name: -input
+          type: wps-process-reference
+          value: OPTICAL_IMAGES_SOURCES
+          quantity: multiple
+        - name: -training
+          type: wps-process-reference
+          value: REFERENCE_DATA
+          quantity: single
+        - name: -result
+          type: wps-process-reference
+          value: RESULT_PATH
+          quantity: single
+        - name: -epsg
+          type: static-option
+          value: 32632
+          quantity: single
