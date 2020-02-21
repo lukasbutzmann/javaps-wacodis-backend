@@ -4,6 +4,10 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
+# Use build-time arguments to invalidate cache 
+# (e.g. --build-arg CACHE_DATE=$(date +%Y-%m-%d:%H:%M:%S))
+ARG CACHE_DATE=not_a_date
+
 # for the moment we still use the wacodis fork, but only until the PR
 # is merged (https://github.com/52North/javaPS/pull/52)
 # then --> 52North/javaps:develop branch should be
@@ -15,9 +19,6 @@ RUN git clone https://github.com/wacodis/javaPS.git javaps \
 RUN mvn -f ./javaps/pom.xml clean install -DskipTests -pl !webapp
 RUN mvn -f ./javaps/javaps-iohandler/pom.xml clean install
 
-# Use build-time arguments to invalidate cache 
-# (e.g. --build-arg CACHE_DATE=$(date +%Y-%m-%d:%H:%M:%S))
-ARG CACHE_DATE=not_a_date
 COPY ./pom.xml ./wacodis-backend/pom.xml
 COPY ./src ./wacodis-backend/src
 # RUN git clone https://github.com/WaCoDiS/javaps-wacodis-backend.git wacodis-backend \
