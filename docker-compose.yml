@@ -14,11 +14,11 @@ services:
         reservations:
           memory: 2G
     environment:
+      # Publicly accessible URL of the service
       SERVICE_SERVICE_URL: http://localhost:8081/wacodis-javaps/service
       SERVICE_PROVIDER_INDIVIDUAL_NAME: Sebastian Drost
       SERVICE_PROVIDER_POSITION_NAME: First Line Supporter (24/7)
     volumes:
-      - ./docker/config/configuration.json:/usr/local/tomcat/webapps/wacodis-wps/WEB-INF/config/configuration.json
       - ./docker/config/tools:/tmp/tools
       - ./docker/config/gpf:/tmp/gpf
       - ./docker/outputs:/tmp/workdir
