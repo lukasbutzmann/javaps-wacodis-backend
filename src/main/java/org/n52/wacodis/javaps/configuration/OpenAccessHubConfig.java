@@ -5,12 +5,16 @@
  */
 package org.n52.wacodis.javaps.configuration;
 
+import java.util.stream.Collectors;
+
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +30,8 @@ import org.springframework.web.client.RestTemplate;
 @PropertySource("classpath:wacodis-javaps.properties")
 public class OpenAccessHubConfig {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenAccessHubConfig.class);
+
     @Value("${openaccesshub.username}")
     private String user;
 
@@ -37,6 +43,10 @@ public class OpenAccessHubConfig {
 
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
+
+        LOGGER.info("Set credentials for Sentinel Open Access Hub. User={}, Password={}", user, password.chars()
+            .mapToObj(i -> "*")
+            .collect(Collectors.joining("")));
 
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
         requestBuilder = requestBuilder.setConnectTimeout(60000);

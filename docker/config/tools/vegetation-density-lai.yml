@@ -1,0 +1,18 @@
+id: vegetation-density-lai
+docker:
+    host: unix:///var/run/docker.sock
+    image: py_to_docker:vegetation-density-lai
+    container: wacodis-eo-lai
+    workDir: /public
+command:
+    folder: python
+    name: /vegetationsdichte_lai.py
+    arguments:
+        - name: -input
+          type: wps-process-reference
+          value: RAW_OPTICAL_IMAGES_SOURCES
+          quantity: single
+        - name: -output
+          type: wps-process-reference
+          value: RESULT_PATH
+          quantity: single

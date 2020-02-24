@@ -1,0 +1,19 @@
+id: gdal-warp
+docker:
+    host: unix:///var/run/docker.sock
+    image: osgeo/gdal:ubuntu-full-latest
+    container: wacodis-gdal-warp
+    workDir: /home
+command:
+    name: gdalwarp
+    arguments:
+        - name: -t_srs
+          type: wps-process-reference
+          value: TARGET_EPSG
+          quantity: single
+        - type: wps-process-reference
+          value: INPUT
+          quantity: single
+        - type: wps-process-reference
+          value: OUTPUT
+          quantity: single
