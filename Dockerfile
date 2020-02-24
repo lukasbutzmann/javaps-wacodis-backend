@@ -20,6 +20,9 @@ RUN mvn -f ./javaps/pom.xml clean install -DskipTests -pl !webapp
 RUN mvn -f ./javaps/javaps-iohandler/pom.xml clean install
 
 COPY ./pom.xml ./wacodis-backend/pom.xml
+# Cache dependencies as long as the POM changes
+RUN mvn -f ./wacodis-backend/pom.xml dependency:go-offline
+
 COPY ./src ./wacodis-backend/src
 # RUN git clone https://github.com/WaCoDiS/javaps-wacodis-backend.git wacodis-backend \
 # 	&& git -C ./wacodis-backend checkout master
