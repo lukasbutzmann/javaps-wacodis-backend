@@ -4,6 +4,7 @@ docker:
     image: osgeo/gdal:ubuntu-full-latest
     container: wacodis-gdal-warp
     workDir: /home
+    hostWorkDir: C:/Users/Sebastian/Entwicklung/Projekte/HSBO/wacodis/wps/workdir
 command:
     name: gdalwarp
     arguments:
