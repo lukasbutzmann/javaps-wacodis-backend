@@ -147,6 +147,7 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
 
         inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages(), true));
         inputArgumentValues.put("MASKING_DATA", this.createInputValue(basePath, this.preprocessReferenceData(), true));
+        inputArgumentValues.put("MASK_VECTOR_DATA", this.createInputValue(basePath, this.preprocessReferenceData(), true));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;
