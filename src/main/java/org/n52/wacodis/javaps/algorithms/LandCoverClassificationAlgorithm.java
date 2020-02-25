@@ -206,7 +206,7 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
                 List<File> preprocessedFiles = imagePreprocessor.preprocess(sentinelProduct, this.getBackendConfig().getWorkingDirectory());
                 preprocessedFiles.forEach(pF -> {
                     try {
-                        preprocessedImages.add(executeGdalWarp(pF));
+                        preprocessedImages.add(executeGdalWarp(pF, this.getBackendConfig().getEpsg()));
                     } catch (WacodisProcessingException ex) {
                         String message = String.format("Error while executing GDAL warp for file: %s", pF.getName());
                         LOGGER.error(message);

@@ -171,11 +171,17 @@ public class SentinelFileDownloader {
      * @throws IOException
      */
     public File unzipFile(File file, String outPath, boolean keepZip) throws IOException {
+        File unzippedFile = null;
         try (ZipFile zipFile = new ZipFile(file)) {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            boolean firstEntry = true;
             while (entries.hasMoreElements()) {
                 ZipEntry entry = entries.nextElement();
                 File entryDestination = new File(outPath, entry.getName());
+                if(firstEntry){
+                    unzippedFile = entryDestination;
+                    firstEntry = false;
+                }
                 if (entry.isDirectory()) {
                     entryDestination.mkdirs();
                 } else {
@@ -190,16 +196,7 @@ public class SentinelFileDownloader {
         if (!keepZip) {
             file.delete();
         }
-        String baseName = FilenameUtils.getBaseName(file.getName());
-        //Case CODE-DE: Naming pattern for zip-files is *.SAFE.zip
-        if (baseName.contains(".SAFE")) {
-            return new File(FilenameUtils.concat(outPath, baseName));
-        }
-        //Case CODE-DE: Naming pattern for zip-files is *.zip
-        else {
-            return new File(FilenameUtils.concat(outPath, baseName + "." + SAFE_EXTENSION));
-        }
-
+        return unzippedFile;
     }
 
     private File retrieveSentinelTestFile(String outPath, boolean unzip) throws IOException {
