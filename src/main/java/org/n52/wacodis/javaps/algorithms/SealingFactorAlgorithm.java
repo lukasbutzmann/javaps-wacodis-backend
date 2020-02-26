@@ -40,7 +40,6 @@ import java.util.*;
         statusSupported = true)
 public class SealingFactorAlgorithm extends AbstractAlgorithm {
 
-    private static final String TIFF_EXTENSION = ".tif";
     private static final String RESULTNAMEPREFIX = "sealing_factor_result";
     private static final String TOOL_CONFIG = "sealing-factor.yml";
     private static final String GPF_FILE = "S2_GeoTIFF_Composition.xml";
