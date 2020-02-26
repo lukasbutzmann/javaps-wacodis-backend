@@ -60,7 +60,7 @@ public class EoToolExecutor {
 
         DockerController dockerController = initDockerController(dockerConfig);
         DockerRunCommandConfiguration dockerRunConfig = this.initRunConfiguration(cmdConfig, input);
-        dockerRunConfig.addVolumeBinding(concatVolumeBinding(dockerConfig.getHostWorkDir(), dockerConfig.getWorkDir()));
+        dockerRunConfig.addVolumeBinding(concatVolumeBinding(this.config.getWorkingDirectory(), dockerConfig.getWorkDir()));
 
         DockerContainer dockerContainer = new DockerContainer(dockerConfig.getContainer(), dockerConfig.getImage());
 

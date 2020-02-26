@@ -15,7 +15,6 @@ public class DockerConfig {
     private String image;
     private String container;
     private String workDir;
-    private String hostWorkDir;
 
     public String getHost() {
         return host;
@@ -49,18 +48,10 @@ public class DockerConfig {
         this.workDir = workDir;
     }
 
-    public String getHostWorkDir() {
-        return hostWorkDir;
-    }
-
-    public void setHostWorkDir(String hostWorkDir) {
-        this.hostWorkDir = hostWorkDir;
-    }
-
     @Override
     public String toString() {
         return "DockerConfig{" + "host=" + host + ", image=" + image
-                + ", container=" + container + ", hostWorkDir=" + hostWorkDir + ", workDir=" + workDir + '}';
+                + ", container=" + container + ", workDir=" + workDir + '}';
     }
 
 }
