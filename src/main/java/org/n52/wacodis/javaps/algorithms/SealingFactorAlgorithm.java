@@ -40,7 +40,6 @@ import java.util.*;
         statusSupported = true)
 public class SealingFactorAlgorithm extends AbstractAlgorithm {
 
-    private static final String TIFF_EXTENSION = ".tif";
     private static final String RESULTNAMEPREFIX = "sealing_factor_result";
     private static final String TOOL_CONFIG = "sealing-factor.yml";
     private static final String GPF_FILE = "S2_GeoTIFF_Composition.xml";
@@ -145,8 +144,9 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
     public Map<String, AbstractCommandValue> createInputArgumentValues(String basePath) throws WacodisProcessingException {
         Map<String, AbstractCommandValue> inputArgumentValues = new HashMap();
 
-        inputArgumentValues.put("OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages(), true));
+        inputArgumentValues.put("RAW_OPTICAL_IMAGES_SOURCES", this.createInputValue(basePath, this.preprocessOpticalImages(), true));
         inputArgumentValues.put("MASKING_DATA", this.createInputValue(basePath, this.preprocessReferenceData(), true));
+        inputArgumentValues.put("MASK_VECTOR_DATA", this.createInputValue(basePath, this.preprocessReferenceData(), true));
         inputArgumentValues.put("RESULT_PATH", this.getResultPath(basePath));
 
         return inputArgumentValues;

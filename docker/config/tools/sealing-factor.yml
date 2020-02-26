@@ -1,0 +1,22 @@
+id: sealing-factor
+docker:
+    host: unix:///var/run/docker.sock
+    image: dev.eftas.com:5000/eftas/de.eftas.wacodis.eo.sealing-factor:latest
+    container: wacodis-eo-sealing-factor
+    workDir: /public
+command:
+    folder: python
+    name: befestigungsgrad.py
+    arguments:
+        - name: -input
+          type: wps-process-reference
+          value: RAW_OPTICAL_IMAGES_SOURCES
+          quantity: single
+        - name: -mask
+          type: wps-process-reference
+          value: MASK_VECTOR_DATA
+          quantity: single
+        - name: -output
+          type: wps-process-reference
+          value: RESULT_PATH
+          quantity: single
