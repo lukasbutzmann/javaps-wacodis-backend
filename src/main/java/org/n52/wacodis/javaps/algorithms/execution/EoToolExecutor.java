@@ -66,7 +66,8 @@ public class EoToolExecutor {
 
         LOGGER.info("executing tool inside docker container " 
                 + dockerContainer.getContainerName() 
-                + ", image: " + dockerContainer.getImageName() 
+                + ", image: " + dockerContainer.getImageName()
+                + ", volume bindings: " + dockerRunConfig.getVolumeBindings()
                 + ", run cmd: " + runCmdAsString(dockerRunConfig));
 
         DockerProcess toolProcess = new DockerProcess(dockerController, dockerContainer, dockerRunConfig);
