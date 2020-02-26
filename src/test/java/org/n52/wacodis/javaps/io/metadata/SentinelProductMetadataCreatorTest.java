@@ -21,13 +21,9 @@ public class SentinelProductMetadataCreatorTest {
 
     private SentinelProductMetadataCreator creator;
 
-    private Product realProduct;
-
     @Before
     public void init() throws IOException {
-        File input = new File("C:/Users/Sebastian/Entwicklung/Projekte/HSBO/wacodis/data/results/land-cover-classification-result.tif");
         creator = new SentinelProductMetadataCreator();
-        realProduct = ProductIO.readProduct(input);
     }
 
     @Test
