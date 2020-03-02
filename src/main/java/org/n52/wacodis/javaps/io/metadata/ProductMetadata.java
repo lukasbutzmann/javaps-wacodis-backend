@@ -15,7 +15,7 @@ public class ProductMetadata {
     private TimeFrame timeFrame;
     private String sourceType;
     private AreaOfInterest areaOfInterest;
-    private LocalDateTime crated;
+    private LocalDateTime created;
 
     public TimeFrame getTimeFrame() {
         return timeFrame;
@@ -41,11 +41,11 @@ public class ProductMetadata {
         this.areaOfInterest = areaOfInterest;
     }
 
-    public LocalDateTime getCrated() {
-        return crated;
+    public LocalDateTime getCreated() {
+        return created;
     }
 
-    public void setCreated(LocalDateTime crated) {
-        this.crated = crated;
+    public void setCreated(LocalDateTime created) {
+        this.created = created;
     }
 }
