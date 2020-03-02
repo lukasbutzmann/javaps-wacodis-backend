@@ -1,0 +1,365 @@
+{
+	"info": {
+		"_postman_id": "38658a7f-443e-44d0-910c-3bf1632917b7",
+		"name": "WaCoDiS javaPS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Process Execution",
+			"item": [
+				{
+					"name": "Execute Forest Vitality Change",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"name": "Content-Type",
+								"value": "application/xml",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?> <wps:Execute\r\n    xmlns:wps=\"http://www.opengis.net/wps/2.0\" \r\n    xmlns:ows=\"http://www.opengis.net/ows/2.0\" \r\n    xmlns:xlink=\"http://www.w3.org/1999/xlink\" \r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" \r\n    xsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\" \r\n\r\n    service=\"WPS\" \r\n    version=\"2.0.0\" \r\n    response=\"document\" \r\n    mode=\"sync\"> \r\n\r\n    <ows:Identifier>de.hsbo.wacodis.forest_vitality_change</ows:Identifier> \r\n    \r\n    <!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) for first timestep-->\r\n    <wps:Input id=\"OPTICAL_IMAGES_SOURCES_1\">\r\n        <wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('21eb3657-9a68-46cf-979a-9b731dfedf24')/$value</wps:Data>\r\n    </wps:Input>\r\n    \r\n    <!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) for second timestep-->\r\n    <wps:Input id=\"OPTICAL_IMAGES_SOURCES_2\">\r\n        <wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('72bdd44c-bc96-406f-95ee-e6e903a59452')/$value</wps:Data>\r\n    </wps:Input>\r\n    \r\n    <wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n    \r\n    <wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n</wps:Execute>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute GDAL Warp",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"async\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.gdal_warp</ows:Identifier>\r\n\r\n\t<wps:Input id=\"OPTICAL_IMAGES_SOURCE\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('305585dc-7a22-4e40-9260-e19b9b804f36')/$value</wps:Data>\r\n\t</wps:Input>\r\n\r\n\t<wps:Input id=\"EPSG\">\r\n\t\t<wps:Data mimeType=\"text/plain\">EPSG:32632</wps:Data>\r\n\t</wps:Input>\r\n\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Land Cover Classification",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.land_cover_classification</ows:Identifier>\r\n\r\n\t<!-- URL for Sentinel-2 file (from Copernicus Open Access Hub or CODE-DE) -->\r\n\t<wps:Input id=\"OPTICAL_IMAGES_SOURCES\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('1b469212-a1bd-4a7f-9d86-ebca495e597b')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t\r\n\t<!-- Area of interest for Sentinel file -->\r\n\t<wps:Input id=\"AREA_OF_INTEREST\">\r\n\t\t<wps:Data mimeType=\"text/plain\">[5.87320, 55.00501, 5.87443, 55.00650]</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<!-- Training data -->\r\n\t<wps:Input id=\"REFERENCE_DATA\">\r\n    \t<wps:Reference xlink:href=\"http://wacodis.eftas.com:8081/geoserver/wacodis/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=wacodis%3AWaCoDiS_Landbedeckung_2019-10-14_unterklasse&amp;maxFeatures=50&amp;outputFormat=gml3&amp;srsName=EPSG:32632\" mimeType=\"text/xml\" schema=\"http://schemas.opengis.net/gml/3.0.0/base/feature.xsd\" />\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Sealing Factor",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.sealing_factor</ows:Identifier>\r\n\r\n\t<!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) -->\t\r\n\t<wps:Input id=\"OPTICAL_IMAGES_SOURCES\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('24fcc458-fb43-4ca6-9a3e-b34c90781508')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<!--Vector data that should be used as masking layer-->\r\n\t<wps:Input id=\"MASKING_DATA\">\r\n    \t<wps:Reference xlink:href=\"http://wacodis.eftas.com:8081/geoserver/wacodis/ows?service=WFS&amp;version=1.0.0&amp;request=GetFeature&amp;typeName=wacodis%3Amask_befestigungsgrad&amp;maxFeatures=50&amp;outputFormat=gml3\" mimeType=\"text/xml\" schema=\"http://schemas.opengis.net/gml/3.0.0/base/feature.xsd\" />\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Vegetation Density",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.vegetation_density_lai</ows:Identifier>\r\n\t\r\n\t<!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) -->\t\r\n\t<wps:Input id=\"OPTICAL_IMAGES_SOURCES\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('24fcc458-fb43-4ca6-9a3e-b34c90781508')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Sentinel Download Process",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<wps:Execute\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\n\t\n\tservice=\"WPS\"\n\tversion=\"2.0.0\"\n\tresponse=\"document\"\n\tmode=\"sync\">\n    <ows:Identifier>de.hsbo.wacodis.sentinel_download_process</ows:Identifier>\n    \n    <!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) -->\t\n    <wps:Input id=\"SENTINEL_DATA\">\n        <wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('62b81eaa-2ee3-4771-8016-d3c5f15357cb')/$value</wps:Data>\n    </wps:Input>\n\n    <wps:Output id=\"PRODUCT\" transmission=\"value\" mimeType=\"text/xml\"/>\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute Sentinel-2 To GeoTiff Process",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.snap.s2togeotiff</ows:Identifier>\r\n\t\r\n\t<!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) -->\t\r\n\t<wps:Input id=\"SENTINEL-2_URL\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('305585dc-7a22-4e40-9260-e19b9b804f36')/$value</wps:Data>\r\n\t</wps:Input>\r\n\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute NDVI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.snap.ndvi</ows:Identifier>\r\n\r\n\t<wps:Input id=\"SENTINEL_2_IMAGE_SOURCE\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('65e39e7a-5863-4dac-a01a-5d137e537b9f')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute NDWI2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.snap.ndwi2</ows:Identifier>\r\n\r\n\t<wps:Input id=\"SENTINEL_2_IMAGE_SOURCE\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('65e39e7a-5863-4dac-a01a-5d137e537b9f')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Execute WDVI",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:Execute\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\r\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\"\r\n\tresponse=\"document\"\r\n\tmode=\"sync\">\r\n\t\r\n\t<ows:Identifier>de.hsbo.wacodis.snap.wdvi</ows:Identifier>\r\n\r\n\t<wps:Input id=\"SENTINEL_2_IMAGE_SOURCE\">\r\n\t\t<wps:Data mimeType=\"text/plain\">https://scihub.copernicus.eu/dhus/odata/v1/Products('65e39e7a-5863-4dac-a01a-5d137e537b9f')/$value</wps:Data>\r\n\t</wps:Input>\r\n\t\r\n\t<wps:Output id=\"PRODUCT\" transmission=\"reference\" mimeType=\"image/geotiff\"/>\r\n\t\r\n\t<wps:Output id=\"METADATA\" transmission=\"value\" mimeType=\"text/json\"/>\r\n\t\r\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Get Capabilities",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ROOT_URL}}?service=WPS&version=2.0.0&request=GetCapabilities",
+					"host": [
+						"{{ROOT_URL}}"
+					],
+					"query": [
+						{
+							"key": "service",
+							"value": "WPS"
+						},
+						{
+							"key": "version",
+							"value": "2.0.0"
+						},
+						{
+							"key": "request",
+							"value": "GetCapabilities"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Describe Process",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{ROOT_URL}}?service=WPS&version=2.0.0&request=DescribeProcess&Identifier=de.hsbo.wacodis.snap.wdvi",
+					"host": [
+						"{{ROOT_URL}}"
+					],
+					"query": [
+						{
+							"key": "service",
+							"value": "WPS"
+						},
+						{
+							"key": "version",
+							"value": "2.0.0"
+						},
+						{
+							"key": "request",
+							"value": "DescribeProcess"
+						},
+						{
+							"key": "Identifier",
+							"value": "de.hsbo.wacodis.snap.wdvi"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Status",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:GetStatus\r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\">\r\n\t\r\n\t<wps:JobID>6eb09157-c9ee-4905-898f-baf0824288e2</wps:JobID>\r\n\t\r\n</wps:GetStatus>"
+				},
+				"url": {
+					"raw": "{{ROOT_URL}}",
+					"host": [
+						"{{ROOT_URL}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get Result",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/xml"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<wps:GetResult \r\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\r\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\r\n\t\r\n\tservice=\"WPS\"\r\n\tversion=\"2.0.0\">\r\n\t\r\n\t<wps:JobID>6eb09157-c9ee-4905-898f-baf0824288e2</wps:JobID>\r\n\t\r\n</wps:GetResult>"
+				},
+				"url": {
+					"raw": "{{ROOT_URL}}",
+					"host": [
+						"{{ROOT_URL}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}
