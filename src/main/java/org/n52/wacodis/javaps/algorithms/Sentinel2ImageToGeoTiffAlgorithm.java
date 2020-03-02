@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         title = "Sentinel-2 Download to GeoTiff Process",
         abstrakt = "Perform a Sentinel-2 file download, resample the image and "
                 + "write it out as GeoTiff.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class Sentinel2ImageToGeoTiffAlgorithm {

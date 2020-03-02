@@ -39,7 +39,7 @@ import java.util.Map;
         identifier = "de.hsbo.wacodis.gdal_warp",
         title = "GDAL warp process",
         abstrakt = "Perform a GDAL warp for reprojecting a Sentinel-2 image.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class GdalWarpAlgorithm extends AbstractAlgorithm {

@@ -25,7 +25,7 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
         identifier = "de.hsbo.wacodis.snap.ndvi",
         title = " Normalized Difference Vegetation Index",
         abstrakt = "Calculate the NDVI for a Sentinel-2 image.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class NdviSnapAlgorithm extends AbstractSnapAlgorithm {

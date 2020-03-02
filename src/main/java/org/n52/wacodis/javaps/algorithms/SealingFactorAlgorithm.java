@@ -35,7 +35,7 @@ import java.util.*;
         identifier = "de.hsbo.wacodis.sealing_factor",
         title = "Sealing Factor Calculation",
         abstrakt = "Perform a sealing factor calculation for optical images.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class SealingFactorAlgorithm extends AbstractAlgorithm {

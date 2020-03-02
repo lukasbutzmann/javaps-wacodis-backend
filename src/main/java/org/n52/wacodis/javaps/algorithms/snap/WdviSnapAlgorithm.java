@@ -25,7 +25,7 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
         identifier = "de.hsbo.wacodis.snap.wdvi",
         title = "Weighted Difference Vegetation Index",
         abstrakt = "Weighted Difference Vegetation Index retrieves the Isovegetation lines parallel to soil line. Soil line has an arbitrary slope and passes through origin.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class WdviSnapAlgorithm extends AbstractSnapAlgorithm {

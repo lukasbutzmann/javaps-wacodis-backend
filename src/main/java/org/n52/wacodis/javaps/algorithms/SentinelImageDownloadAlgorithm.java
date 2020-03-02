@@ -30,7 +30,7 @@ import org.springframework.web.client.RestTemplate;
         identifier = "de.hsbo.wacodis.sentinel_download_process",
         title = "Sentinel Download Process",
         abstrakt = "Perform a Sentinel file download.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class SentinelImageDownloadAlgorithm {

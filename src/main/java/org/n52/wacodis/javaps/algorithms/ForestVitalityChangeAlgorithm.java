@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         identifier = "de.hsbo.wacodis.forest_vitality_change",
         title = "Forest Vitality Change",
         abstrakt = "Perform a Forest Vitality Change calculation between two times.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {

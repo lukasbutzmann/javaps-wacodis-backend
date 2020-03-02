@@ -25,7 +25,7 @@ import org.n52.wacodis.javaps.io.metadata.ProductMetadata;
         identifier = "de.hsbo.wacodis.snap.ndwi2",
         title = " Normalized Difference Water Index 2",
         abstrakt = "Calculate the NDVWI2 for a Sentinel-2 image, allowing for the measurement of surface water extent",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class Ndwi2SnapAlgorithm extends AbstractSnapAlgorithm{
