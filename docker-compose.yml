@@ -2,7 +2,7 @@ version: '3'
 services:
   javaps:
     build: .
-    image: registry.wacodis.demo.52north.org/javaps:latest
+    image: registry.wacodis.demo.52north.org/javaps:1.0.0
     env_file:
       - ./docker/wacodis.env
     ports:
@@ -16,7 +16,7 @@ services:
     environment:
       # Publicly accessible URL of the service
       SERVICE_SERVICE_URL: http://localhost:8081/wacodis-javaps/service
-      SERVICE_PROVIDER_INDIVIDUAL_NAME: Sebastian Drost
+      SERVICE_PROVIDER_INDIVIDUAL_NAME: TBA
       SERVICE_PROVIDER_POSITION_NAME: First Line Supporter (24/7)
     volumes:
       - ./docker/config/tools:/tmp/tools
