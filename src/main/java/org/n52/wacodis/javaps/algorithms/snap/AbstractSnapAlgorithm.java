@@ -7,6 +7,7 @@ package org.n52.wacodis.javaps.algorithms.snap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import org.apache.commons.io.FilenameUtils;
@@ -63,7 +64,7 @@ public abstract class AbstractSnapAlgorithm {
         LOGGER.info("Succesfully wrote result product as GeoTIFF file: {}.", this.resultPath);
 
         ProductMetadataCreator metadataCreator = new SentinelProductMetadataCreator();
-        this.productMetadata = metadataCreator.createProductMetadata(sentinelProduct);
+        this.productMetadata = metadataCreator.createProductMetadata(result, Collections.singletonList(sentinelProduct));
     }
 
     /**
