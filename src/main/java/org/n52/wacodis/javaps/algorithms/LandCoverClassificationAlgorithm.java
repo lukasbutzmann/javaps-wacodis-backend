@@ -55,7 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         identifier = "de.hsbo.wacodis.land_cover_classification",
         title = "Land Cover Classification",
         abstrakt = "Perform a land cover classification for optical images.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {

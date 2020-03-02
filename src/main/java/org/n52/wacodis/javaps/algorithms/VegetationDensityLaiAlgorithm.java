@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
         identifier = "de.hsbo.wacodis.vegetation_density_lai",
         title = "Vegetation Density Leaf Area Index",
         abstrakt = "Perform a Vegetation Density Leaf Area Index calculation.",
-        version = "0.0.1",
+        version = "1.0.0",
         storeSupported = true,
         statusSupported = true)
 public class VegetationDensityLaiAlgorithm extends AbstractAlgorithm {
