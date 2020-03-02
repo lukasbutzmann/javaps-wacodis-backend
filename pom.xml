@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.n52.wacodis</groupId>
     <artifactId>javaps-wacodis-backend</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>javaPS WaCoDiS process repository</name>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,7 +23,7 @@
         <url>https://github.com/WaCoDiS/javaps-wacodis-backend</url>
         <connection>scm:git:git://github.com/WaCoDiS/javaps-wacodis-backend.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/WaCoDiS/javaps-wacodis-backend.git</developerConnection>
-        <tag>1.0.0</tag>
+        <tag>1.0.1-SNAPSHOT</tag>
     </scm>
         
     <repositories>
