@@ -51,23 +51,9 @@ public class ForestVitalityChangeAlgorithm extends AbstractAlgorithm {
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    private String opticalImagesSourceType;
     private String opticalImagesSource1, opticalImagesSource2;
     private ProductMetadata productMetadata;
     private Product sentinelProduct1, sentinelProduct2;
-
-    @LiteralInput(
-            identifier = "OPTICAL_IMAGES_TYPE",
-            title = "Optical images source type",
-            abstrakt = "The type of the source for the optical images",
-            minOccurs = 1,
-            maxOccurs = 1,
-            defaultValue = "Sentinel-2",
-            allowedValues = {"Sentinel-2", "Aerial_Image"})
-    public void setOpticalImagesSourceType(String value) {
-        this.opticalImagesSourceType = value;
-
-    }
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_SOURCES_1",

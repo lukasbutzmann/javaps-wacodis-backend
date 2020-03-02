@@ -70,26 +70,11 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    private String opticalImagesSourceType;
     private List<String> opticalImagesSources;
-    private String referenceDataType;
     private String areaOfInterest;
     private SimpleFeatureCollection referenceData;
     private ProductMetadata productMetadata;
     private List<Product> sentinelProductList;
-
-    @LiteralInput(
-            identifier = "OPTICAL_IMAGES_TYPE",
-            title = "Optical images source type",
-            abstrakt = "The type of the source for the optical images",
-            minOccurs = 1,
-            maxOccurs = 1,
-            defaultValue = "Sentinel-2",
-            allowedValues = {"Sentinel-2", "Aerial_Image"})
-    public void setOpticalImagesSourceType(String value) {
-        this.opticalImagesSourceType = value;
-
-    }
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_SOURCES",
@@ -99,18 +84,6 @@ public class LandCoverClassificationAlgorithm extends AbstractAlgorithm {
             maxOccurs = 6)
     public void setOpticalImagesSources(List<String> value) {
         this.opticalImagesSources = value;
-    }
-
-    @LiteralInput(
-            identifier = "REFERENCE_DATA_TYPE",
-            title = "Reference data type",
-            abstrakt = "The type of the reference data",
-            minOccurs = 1,
-            maxOccurs = 1,
-            defaultValue = "ATKIS",
-            allowedValues = {"ATKIS", "MANUAL"})
-    public void setReferenceDataType(String value) {
-        this.referenceDataType = value;
     }
 
     @LiteralInput(

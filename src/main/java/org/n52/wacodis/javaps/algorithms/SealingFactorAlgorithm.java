@@ -49,25 +49,10 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
     @Autowired
     private SentinelFileDownloader sentinelDownloader;
 
-    private String opticalImagesSourceType;
     private String opticalImagesSource;
-    private String maskingDataType;
     private SimpleFeatureCollection maskingData;
     private ProductMetadata productMetadata;
     private Product sentinelProduct;
-
-    @LiteralInput(
-            identifier = "OPTICAL_IMAGES_TYPE",
-            title = "Optical images source type",
-            abstrakt = "The type of the source for the optical images",
-            minOccurs = 1,
-            maxOccurs = 1,
-            defaultValue = "Sentinel-2",
-            allowedValues = {"Sentinel-2", "Aerial_Image"})
-    public void setOpticalImagesSourceType(String value) {
-        this.opticalImagesSourceType = value;
-
-    }
 
     @LiteralInput(
             identifier = "OPTICAL_IMAGES_SOURCES",
@@ -77,18 +62,6 @@ public class SealingFactorAlgorithm extends AbstractAlgorithm {
             maxOccurs = 1)
     public void setOpticalImagesSources(String value) {
         this.opticalImagesSource = value;
-    }
-
-    @LiteralInput(
-            identifier = "MASKING_DATA_TYPE",
-            title = "Masking data type",
-            abstrakt = "The type of the reference data",
-            minOccurs = 1,
-            maxOccurs = 1,
-            defaultValue = "MASK_VECTOR_DATA",
-            allowedValues = {"MASK_VECTOR_DATA","MASK_RASTER_DATA"})
-    public void setMaskingDataType(String value) {
-        this.maskingDataType = value;
     }
 
     @ComplexInput(
