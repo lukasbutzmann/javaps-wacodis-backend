@@ -32,6 +32,7 @@
     <bean id="forestVitalityChangeProcess" class="org.n52.wacodis.javaps.algorithms.ForestVitalityChangeAlgorithm" />
     <bean id="sealingFactorProcess" class="org.n52.wacodis.javaps.algorithms.SealingFactorAlgorithm" />
     <bean id="gdalWarpProcess" class="org.n52.wacodis.javaps.algorithms.GdalWarpAlgorithm" />
+    <bean id="waterMaskProcess" class="org.n52.wacodis.javaps.algorithms.WaterMaskAlgorithm" />
 
     <bean id="openAccessHubConfig" class="org.n52.wacodis.javaps.configuration.OpenAccessHubConfig" />
     <bean id="wacodisBackendConfig" class="org.n52.wacodis.javaps.configuration.WacodisBackendConfig" />
