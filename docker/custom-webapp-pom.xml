@@ -205,7 +205,7 @@
         <dependency>
         	<groupId>org.n52.geoprocessing</groupId>
             <artifactId>javaps-iohandler</artifactId>
-            <version>1.5.0-SNAPSHOT</version>
+            <version>1.4.0</version>
             <scope>runtime</scope>
         </dependency>
     </dependencies>
