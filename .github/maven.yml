@@ -1,0 +1,29 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Checkout WaCoDiS javaPS
+        uses: actions/checkout@v2
+        with:
+          repository: WaCoDiS/javaPS
+          ref: wacodis-developments
+          path: wps-javaps
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Build dependencies
+        run: mvn -B install --file ./wps-javaps/pom.xml
+      - name: Build
+        run: mvn -B package --file pom.xml
