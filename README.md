@@ -1,4 +1,5 @@
 # javaps-wacodis-backend
+![Build](https://github.com/WaCoDiS/javaps-wacodis-backend/workflows/Build/badge.svg)  
 Processing backend for javaPS containing processes for WaCoDiS project
 
 ## Dockerized javaPS

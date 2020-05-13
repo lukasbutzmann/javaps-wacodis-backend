@@ -12,12 +12,9 @@ ARG CACHE_DATE=not_a_date
 # is merged (https://github.com/52North/javaPS/pull/52)
 # then --> 52North/javaps:develop branch should be
 RUN git clone https://github.com/52North/javaPS.git javaps \
-    && git clone https://github.com/52North/javaps-iohandler.git javaps/javaps-iohandler \
- 	&& git -C ./javaps/javaps-iohandler checkout develop \
  	&& git -C ./javaps checkout develop
 
 RUN mvn -f ./javaps/pom.xml clean install -DskipTests -pl !webapp
-RUN mvn -f ./javaps/javaps-iohandler/pom.xml clean install
 
 COPY ./pom.xml ./wacodis-backend/pom.xml
 # Cache dependencies as long as the POM changes

@@ -2,7 +2,7 @@ version: '3'
 services:
   javaps:
     build: .
-    image: registry.wacodis.demo.52north.org/javaps:1.0.1-SNAPSHOT
+    image: wacodis/javaps-wacodis-backend:1.1.0
     env_file:
       - ./docker/wacodis.env
     ports:
