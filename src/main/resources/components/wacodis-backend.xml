@@ -29,6 +29,7 @@
     <bean id="sentinelProcess" class="org.n52.wacodis.javaps.algorithms.SentinelImageDownloadAlgorithm" />
     <bean id="sentinelGeotiffProcess" class="org.n52.wacodis.javaps.algorithms.Sentinel2ImageToGeoTiffAlgorithm" />
     <bean id="vegetationDensityLaiProcess" class="org.n52.wacodis.javaps.algorithms.VegetationDensityLaiAlgorithm" />
+    <bean id="vegetationDensityNdviProcess" class="org.n52.wacodis.javaps.algorithms.VegetationDensityNdviAlgorithm" />
     <bean id="forestVitalityChangeProcess" class="org.n52.wacodis.javaps.algorithms.ForestVitalityChangeAlgorithm" />
     <bean id="sealingFactorProcess" class="org.n52.wacodis.javaps.algorithms.SealingFactorAlgorithm" />
     <bean id="gdalWarpProcess" class="org.n52.wacodis.javaps.algorithms.GdalWarpAlgorithm" />
