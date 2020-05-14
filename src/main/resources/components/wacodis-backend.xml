@@ -33,10 +33,13 @@
     <bean id="forestVitalityChangeProcess" class="org.n52.wacodis.javaps.algorithms.ForestVitalityChangeAlgorithm" />
     <bean id="sealingFactorProcess" class="org.n52.wacodis.javaps.algorithms.SealingFactorAlgorithm" />
     <bean id="gdalWarpProcess" class="org.n52.wacodis.javaps.algorithms.GdalWarpAlgorithm" />
+    <bean id="wcsTestAlgorithm" class="org.n52.wacodis.javaps.algorithms.WCSTestAlgorithm" />
 
     <bean id="openAccessHubConfig" class="org.n52.wacodis.javaps.configuration.OpenAccessHubConfig" />
     <bean id="wacodisBackendConfig" class="org.n52.wacodis.javaps.configuration.WacodisBackendConfig" />
+    <bean id="basicHttpServiceConfig" class="org.n52.wacodis.javaps.configuration.BasicHttpServiceConfig" />
     <bean id="sentinelFileDownloader" class="org.n52.wacodis.javaps.io.http.SentinelFileDownloader" />
+    <bean id="wcsFileDownloader" class="org.n52.wacodis.javaps.io.http.WCSFileDownloader" />
     <bean id="sentinel2Preprocesor" class="org.n52.wacodis.javaps.preprocessing.Sentinel2Preprocessor" />
     <bean id="toolConfigParser" class="org.n52.wacodis.javaps.configuration.tools.ToolConfigParser" />
     <bean id="eoToolExecutor" class="org.n52.wacodis.javaps.algorithms.execution.EoToolExecutor" />
