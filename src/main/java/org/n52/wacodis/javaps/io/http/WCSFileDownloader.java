@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.slf4j.Logger;
@@ -52,7 +53,28 @@ public class WCSFileDownloader {
         this.basicHttpService = basicHttpService;
     }
     
-    public File downloadWCSFile(String url, int hashcode) throws IOException {
+     /**
+     * Downloads a WCS image file from the specified URL and writes it to
+     * the default working directory.
+     *
+     * @param url getCoverage URL for the WCS.
+     * @return the file that contains the image
+     * @throws IOException if internal file handling fails for some reason
+     */
+    public File downloadWCSFile(String url) throws IOException {
+        return downloadWCSFile(url, config.getWorkingDirectory());
+    }
+    
+    /**
+     * Downloads a WCS image file from the specified URL and writes it to
+     * the specified location.
+     *
+     * @param url getCoverage URL for the WCS.
+     * @param outPath Path to the directory to save the image file in
+     * @return the file that contains the image
+     * @throws IOException if internal file handling fails for some reason
+     */
+    public File downloadWCSFile(String url, String outPath) throws IOException {
 
         LOG.info("Downloading WCS product: {}", url);
 
@@ -64,7 +86,7 @@ public class WCSFileDownloader {
 
         ResponseExtractor<File> responseExtractor = (ClientHttpResponse response) -> {
             String fileName = response.getHeaders().getContentDisposition().getFilename();
-            File imageFile = new File(config.getWorkingDirectory() + "/ELEVATION/"+ hashcode + "_" + fileName);
+            File imageFile = new File(outPath + "/" + UUID.randomUUID().toString() + "_"+ fileName);
             FileUtils.copyInputStreamToFile(response.getBody(), imageFile);
             return imageFile;
         };

@@ -18,6 +18,7 @@ import org.n52.javaps.algorithm.annotation.LiteralInput;
 import org.n52.javaps.algorithm.annotation.LiteralOutput;
 import org.n52.wacodis.javaps.GeometryParseException;
 import org.n52.wacodis.javaps.WacodisProcessingException;
+import org.n52.wacodis.javaps.configuration.WacodisBackendConfig;
 import org.n52.wacodis.javaps.io.http.WCSFileDownloader;
 import org.n52.wacodis.javaps.utils.GeometryUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -41,10 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class WCSTestAlgorithm{
     
     private static final double MAX_RASTER_RANGE_WCS_RESPONSE = 2000;
-    
-    //TODO: Parameter aus URL
-    private static final String SUBSETTINGCRS = "EPSG:4326";
     private static final double SCALEFACTOR = 0.1;
+    private static final String SUBSETTINGCRS = "EPSG:4326";
     
     private static final Logger LOGGER = LoggerFactory.getLogger(WCSTestAlgorithm.class);
     
@@ -53,6 +52,13 @@ public class WCSTestAlgorithm{
     private List<String> wcsRequestList;
     String[][] requests;
     
+    private WacodisBackendConfig config;
+    
+    @Autowired
+    public void setConfig(WacodisBackendConfig config) {
+        this.config = config;
+    }
+
     @Autowired
     private WCSFileDownloader wcsDownloader;
     
@@ -63,7 +69,7 @@ public class WCSTestAlgorithm{
             minOccurs = 1,
             maxOccurs = 1
     )
-    public void setReferenceData(String value) {
+    public void setWCSUrl(String value) {
         this.wcsUrl = value;
     }
     
@@ -102,28 +108,29 @@ public class WCSTestAlgorithm{
             width = JTS.orthodromicDistance(coordListBbox.get(0), coordListBbox.get(2), crs);
             height = JTS.orthodromicDistance(coordListBbox.get(0), coordListBbox.get(1), crs);
         }catch (TransformException ex) {
-            Exceptions.printStackTrace(ex);
+            LOGGER.error("Error while calculate orthodromicDistance: {}", ex);
+            throw new WacodisProcessingException("Error while trying to calculate orthodromicDistance: {}", ex);
         }
         
         //Number of images
-        int numberOfImagesWidht =  (int) (Math.ceil(width/(MAX_RASTER_RANGE_WCS_RESPONSE/SCALEFACTOR)));
+        int numberOfImagesWidth =  (int) (Math.ceil(width/(MAX_RASTER_RANGE_WCS_RESPONSE/SCALEFACTOR)));
         int numberOfImagesHeight =  (int) (Math.ceil(height/(MAX_RASTER_RANGE_WCS_RESPONSE/SCALEFACTOR)));
-        //int numberOfImages = numberOfImagesWidht*numberOfImagesHeight;
+        //int numberOfImages = numberOfImagesWidth*numberOfImagesHeight;
         
         double minX = coordListBbox.get(0).x;
         double maxX = coordListBbox.get(2).x;
         double minY = coordListBbox.get(0).y;
         double maxY = coordListBbox.get(1).y;
-
-        double imageWidht = (maxX - minX) / numberOfImagesWidht;
+        
+        double imageWidth = (maxX - minX) / numberOfImagesWidth;
         double imageHeight = (maxY - minY) / numberOfImagesHeight;
 
-        requests = new String[numberOfImagesWidht][numberOfImagesHeight];
+        requests = new String[numberOfImagesWidth][numberOfImagesHeight];
         this.wcsRequestList = new ArrayList();
         //Coordinates of picturers
-        for (int i = 0; numberOfImagesWidht > i; i++) {
-            double xMin = minX + i * (imageWidht);
-            double xMax = minX + (i + 1) * (imageWidht);
+        for (int i = 0; numberOfImagesWidth > i; i++) {
+            double xMin = minX + i * (imageWidth);
+            double xMax = minX + (i + 1) * (imageWidth);
             for (int j = 0; numberOfImagesHeight > j; j++) {
                 double yMin = minY + j * imageHeight;
                 double yMax = minY + (j + 1) * imageHeight;
@@ -136,7 +143,7 @@ public class WCSTestAlgorithm{
         this.wcsRequestList.forEach(wcsr -> {
             try {
                 // Download wcs data
-                File wcsFile = wcsDownloader.downloadWCSFile(wcsr, wcsr.hashCode());
+                File wcsFile = wcsDownloader.downloadWCSFile(wcsr, config.getWorkingDirectory());
                 wcsFileList.add(wcsFile);
             } catch (IOException ex) {
                 LOGGER.error("Error while retrieving WCS file: {}", wcsr, ex);
@@ -145,9 +152,11 @@ public class WCSTestAlgorithm{
     }
     
     public String wcsRequestBuilder(double xMin, double xMax, double yMin, double yMax){
-        String subset = "&SUBSET=x("+xMin+","+xMax+")&SUBSET=y("+yMin+","+yMax+")";
+        String subset = "&SUBSET=x("+xMin+","+xMax+")&SUBSET=y("+yMin+","+yMax+")"
+                + "&SUBSETTINGCRS="+SUBSETTINGCRS
+                + "&SCALEFACTOR="+SCALEFACTOR;
         String wcsrequest = wcsUrl+subset;                
         return wcsrequest;
-    }    
+    }
     
 }
