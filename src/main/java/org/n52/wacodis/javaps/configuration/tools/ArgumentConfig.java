@@ -15,6 +15,7 @@ public class ArgumentConfig {
     private String type;
     private String value;
     private String quantity;
+    private String separator;
 
     public String getName() {
         return name;
@@ -48,10 +49,18 @@ public class ArgumentConfig {
         this.quantity = quantity;
     }
 
+    public String getSeparator() {
+        return separator;
+    }
+
+    public void setSeparator(String separator) {
+        this.separator = separator;
+    }
+
     @Override
     public String toString() {
         return "ArgumentConfig{" + "name=" + name + ", type=" + type
-                + ", value=" + value + ", quantity=" + quantity + '}';
+                + ", value=" + value + ", quantity=" + quantity + ", separator=" + separator + '}';
     }
 
     public static enum TypeValues {

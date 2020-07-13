@@ -1,0 +1,17 @@
+id: gdal-merge-geotiffs
+docker:
+    host: tcp://localhost:2375
+    image: osgeo/gdal:ubuntu-full-latest
+    container: wacodis-gdal-merge-geotiffs
+    workDir: /home
+command:
+    name: gdal_merge.py
+    arguments:
+        - name: -o
+          type: wps-process-reference
+          value: OUTPUT
+          quantity: single
+        - type: wps-process-reference
+          value: INPUTS
+          quantity: multiple
+          separator: " "

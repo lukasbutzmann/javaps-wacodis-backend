@@ -104,7 +104,12 @@ public class EoToolExecutor {
                 }
                 if (cmdArgument.getQuantity().equals(ArgumentConfig.QuantityValues.MULTIPLE.getName())) {
                     MultipleCommandValue value = (MultipleCommandValue) input.get(cmdArgument.getValue());
-                    String valueString = StringUtils.join(value.getCommandValue(), ",");
+                    String valueString = "";
+                    if (cmdArgument.getSeparator() == null) {
+                        valueString = StringUtils.join(value.getCommandValue(), ",");
+                    } else {
+                        valueString = StringUtils.join(value.getCommandValue(), cmdArgument.getSeparator());
+                    }
 
                     runConfig.addCommandParameter(new CommandParameter(cmdArgument.getName(), valueString));
                 } else {

@@ -156,6 +156,32 @@
 					},
 					"response": []
 				},
+								{
+					"name": "Execute WCS Download Process",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<wps:Execute\n\txmlns:wps=\"http://www.opengis.net/wps/2.0\"\n\txmlns:ows=\"http://www.opengis.net/ows/2.0\"\n\txmlns:xlink=\"http://www.w3.org/1999/xlink\"\n\txmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n\txsi:schemaLocation=\"http://www.opengis.net/wps/2.0 ../wps.xsd\"\n\t\n\tservice=\"WPS\"\n\tversion=\"2.0.0\"\n\tresponse=\"document\"\n\tmode=\"sync\">\n    <ows:Identifier>de.hsbo.wacodis.wcs_test_algorithm</ows:Identifier>\n    \n    <!-- Sentinel-2 file URL (Open Access Hub or CODE-DE) -->\t\n    <wps:Input id=\"WCS_DATA\">\n        <!--wps:Data mimeType=\"text/plain\">https://www.wcs.nrw.de/geobasis/wcs_nw_dgm</wps:Data-->\n        <wps:Data mimeType=\"text/plain\">https://www.wcs.nrw.de/geobasis/wcs_nw_dgm?VERSION=2.0.1&amp;SERVICE=wcs&amp;REQUEST=GetCoverage&amp;COVERAGEID=nw_dgm&amp;FORMAT=GTiff</wps:Data>\n    </wps:Input>\n    <wps:Input id=\"AREA_OF_INTEREST\">\n        <wps:Data mimeType=\"text/plain\">[6.9,50.9,7.6,51.34]</wps:Data>\n    </wps:Input>\n    <wps:Output id=\"PRODUCT\" transmission=\"value\" mimeType=\"text/xml\"/>\n</wps:Execute>"
+						},
+						"url": {
+							"raw": "{{ROOT_URL}}",
+							"host": [
+								"{{ROOT_URL}}"
+							]
+						}
+					},
+					"response": []
+				},
 				{
 					"name": "Execute Sentinel-2 To GeoTiff Process",
 					"request": {

@@ -8,6 +8,8 @@ package org.n52.wacodis.javaps.utils;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.crs.DefaultProjectedCRS;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateList;
 import org.n52.wacodis.javaps.GeometryParseException;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -52,5 +54,21 @@ public class GeometryUtils {
                 + Double.parseDouble(coord[0]) + " " + Double.parseDouble(coord[1]) + "))";
 
         return wkt;
+    }
+    
+        public static CoordinateList getCoordinatesOfBbox(String bBox) throws GeometryParseException{
+        if (!bBox.matches(BBOX_REGEX)) {
+            throw new GeometryParseException("Can not parse bounding box: " + bBox, EXPECTED_BBOX_FORMAT);
+        }
+        String[] coord = bBox.substring(1, bBox.length() - 1).split(",");
+        
+        CoordinateList coordinatelist = new CoordinateList();
+        
+        coordinatelist.add(new Coordinate(Double.parseDouble(coord[0]), Double.parseDouble(coord[1])));
+        coordinatelist.add(new Coordinate(Double.parseDouble(coord[0]), Double.parseDouble(coord[3])));
+        coordinatelist.add(new Coordinate(Double.parseDouble(coord[2]), Double.parseDouble(coord[1])));
+        coordinatelist.add(new Coordinate(Double.parseDouble(coord[2]), Double.parseDouble(coord[3])));
+        
+        return coordinatelist;
     }
 }
